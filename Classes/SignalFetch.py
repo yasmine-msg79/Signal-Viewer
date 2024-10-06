@@ -1,0 +1,3 @@
+
+class SignalFetch:
+    pass

@@ -1,0 +1,3 @@
+
+class ReportGenerate:
+    pass
