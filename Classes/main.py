@@ -1,5 +1,6 @@
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout
+from PyQt5.QtCore import Qt
 import ChannelViewer
 import ControlPanel
 import ReportGenerate
@@ -16,7 +17,11 @@ class MainApp(QMainWindow):
         self.signal_fetcher = SignalFetch.SignalFetch()
 
         self.setWindowTitle("Signal Viewer")
-        self.showMaximized()
+        #self.showMaximized()
+        self.setWindowState(Qt.WindowMaximized)
+        self.setWindowFlags(Qt.Window |Qt.WindowMinimizeButtonHint| Qt.CustomizeWindowHint | Qt.WindowCloseButtonHint)
+
+        #self.setFixedSize(self.size())
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
