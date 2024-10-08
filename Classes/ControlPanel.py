@@ -38,17 +38,79 @@ class MainApp(QMainWindow, ui):
         
         self.show()
 
-    def browse_signal_file(self):
-        options = QFileDialog.Options()
-        fileName, _ = QFileDialog.getOpenFileName(self, "Open Signal File", "", "All Files (*);;Signal Files (*.sig)", options=options)
-        if fileName:
-            print(f"File selected: {fileName}")
-            # Load and display the signal file
-            self.load_signal(fileName)
+  
 
-    def load_signal(self, file_path):
-        # Implement the logic to load and display the signal from the file
-        pass
+    def toggle_play_pause(self):
+        if self.current_graph == self.graph1:
+            if self.is_playing[0]["is_playing"]:
+                self.is_playing[0]["is_playing"] = False
+                self.playButton.setText('Play')
+                self.set_icon("Icons/play-svgrepo-com.svg")
+                last_data = self.get_last_data_point("graph1")[0]
+                self.graph1.setLimits(xMin=0)
+                self.graph1.setLimits(yMin=-0.5, yMax=1)
+            else:
+                self.is_playing[0]["is_playing"] = True
+                self.playButton.setText('Pause')
+                self.set_icon("Icons/pause.svg")
+
+        elif self.current_graph == self.graph2:
+            if self.is_playing[1]["is_playing"]:
+                self.is_playing[1]["is_playing"] = False
+                self.playButton.setText('Play')
+                self.set_icon("Icons/play-svgrepo-com.svg")
+                last_data = self.get_last_data_point("graph2")[0]
+                self.graph2.setLimits(xMin=0, xMax=last_data)
+                self.graph2.setLimits(yMin=-0.5, yMax=1)
+
+            else:
+                self.is_playing[1]["is_playing"] = True
+                self.playButton.setText('Pause')
+                self.set_icon("Icons/pause.svg")
+                # Allow free panning when playing
+                # self.set_panning_limits(self.graph2, False)
+
+        else:  # link mode
+            for graph in self.is_playing:
+                if graph["is_playing"]:
+                    graph["is_playing"] = False
+                    self.playButton.setText('Play')
+                    self.set_icon("Icons/play-svgrepo-com.svg")
+                    # Restrict panning beyond the last data point when pausing
+                    # self.set_panning_limits(self.current_graph, True)
+                    self.graph1.setLimits(xMin=0, xMax=last_data)
+                    self.graph2.setLimits(xMin=0, xMax=last_data)
+                    self.graph1.setLimits(yMin=-0.5, yMax=1)
+                    self.graph2.setLimits(yMin=-0.5, yMax=1)
+                else:
+                    graph["is_playing"] = True
+                    self.playButton.setText('Pause')
+                    self.set_icon("Icons/pause.svg")
+                    # Allow free panning when playing
+                    # self.set_panning_limits(self.current_graph, False)
+
+    def rewind_graph(self):
+        if (self.current_graph == self.graph1):
+            self.initialize_data()
+            self.current_graph.clear()
+            self.assign_colors(self.get_graph_name())
+        elif (self.current_graph == self.graph2):
+            self.initialize_data()
+            self.current_graph.clear()
+            self.assign_colors(self.get_graph_name())
+        else:  # link mode
+            self.initialize_data()
+            self.current_graph[0].clear()
+            self.current_graph[1].clear()
+
+            for signal_path in self.graph1_signals_paths:
+                # so that the plot appears only on its corresponding graph
+                self.sourceGraph = "graph1"
+                self.assign_colors(self.sourceGraph)
+            for signal_path in self.graph2_signals_paths:
+                self.sourceGraph = "graph2"
+                self.assign_colors(self.sourceGraph)
+            self.sourceGraph = "both"  # so that the controls apply to both graphs
 
     def link_graphs(self):
         # Implement the logic to link/unlink the graphs
