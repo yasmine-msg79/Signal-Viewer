@@ -112,6 +112,31 @@ class MainApp(QMainWindow, ui):
                 self.assign_colors(self.sourceGraph)
             self.sourceGraph = "both"  # so that the controls apply to both graphs
 
+    def zoom_in(self):
+        # Scale the viewbox around the specified center point
+        if (self.current_graph == self.graph1):
+            view_box = self.graph1.plotItem.getViewBox()
+            view_box.scaleBy((0.5, 0.5))
+        elif (self.current_graph == self.graph2):
+            view_box = self.graph2.plotItem.getViewBox()
+            view_box.scaleBy((0.5, 0.5))
+        else:  # link mode
+            for graph in self.current_graph:
+                view_box = graph.plotItem.getViewBox()
+                view_box.scaleBy((0.5, 0.5))
+
+    def zoom_out(self):
+        # Scale the viewbox around the specified center point
+        if (self.current_graph == self.graph1):
+            view_box = self.graph1.plotItem.getViewBox()
+            view_box.scaleBy((1.5, 1.5))
+        elif (self.current_graph == self.graph2):
+            view_box = self.graph2.plotItem.getViewBox()
+            view_box.scaleBy((1.5, 1.5))
+        else:  # link mode
+            for graph in self.current_graph:
+                view_box = graph.plotItem.getViewBox()
+                view_box.scaleBy((1.5, 1.5))
     def link_graphs(self):
         # Implement the logic to link/unlink the graphs
         pass
