@@ -137,6 +137,14 @@ class MainApp(QMainWindow, ui):
             for graph in self.current_graph:
                 view_box = graph.plotItem.getViewBox()
                 view_box.scaleBy((1.5, 1.5))
+
+    def change_speed(self):
+        if self.get_graph_name() == "both":
+            self.data_index["graph1"] = self.speedSlider.value()
+            self.data_index["graph2"] = self.speedSlider.value()
+        else:
+            self.data_index[self.get_graph_name()] = self.speedSlider.value()
+            
     def link_graphs(self):
         # Implement the logic to link/unlink the graphs
         pass
