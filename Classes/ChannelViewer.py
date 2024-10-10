@@ -14,10 +14,14 @@ class ChannelViewer(PyQt5.QtWidgets.QWidget):
         self.graph2.setBackground('w')
         self.Glue_Editor = pg.PlotWidget(self)
         self.Glue_Editor.setBackground('w')
-        self.Polar1 = pg.PlotWidget(self)
+
+        self.Polar1 = pg.PlotWidget(polar=True)
         self.Polar1.setBackground('w')
-        self.Polar2 = pg.PlotWidget(self)
+        self.Polar1.getPlotItem().setAspectLocked(True)
+
+        self.Polar2 = pg.PlotWidget(polar=True)
         self.Polar2.setBackground('w')
+        self.Polar2.getPlotItem().setAspectLocked(True)
 
         self.graph_1 = self.findChild(QtWidgets.QFrame, "graph1")
         self.graph_2 = self.findChild(QtWidgets.QFrame, "graph2")
@@ -31,7 +35,6 @@ class ChannelViewer(PyQt5.QtWidgets.QWidget):
         self.polar_1.setLayout(QtWidgets.QVBoxLayout())
         self.polar_2.setLayout(QtWidgets.QVBoxLayout())
 
-
         self.graph_1.layout().addWidget(self.graph1)
         self.graph_2.layout().addWidget(self.graph2)
         self.glue_editor.layout().addWidget(self.Glue_Editor)
@@ -42,6 +45,7 @@ class ChannelViewer(PyQt5.QtWidgets.QWidget):
         self.graph2.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.Glue_Editor.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
         self.Polar1.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.Polar2.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
         # sample signals to test ui
         self.signal1 = np.random.randn(160)
@@ -52,9 +56,29 @@ class ChannelViewer(PyQt5.QtWidgets.QWidget):
         self.display_signal(self.signal2, self.graph2)
         self.display_signal(self.signal3, self.Glue_Editor)
 
+        self.ActiveSignals = [self.signal1, self.signal2, self.signal3]
+
 
 
 
     def display_signal(self, signal, viewer):
         viewer.clear()
         viewer.plot(signal, pen='r')
+
+    def plot_rect(self,signal):
+        pass
+
+    def plot_polar(self, signal):
+        pass
+
+    def calc_statistics(self,signal):
+        pass
+
+    def fill_stat_table(self,signal):
+        pass
+
+    def get_signal_stat(self,signal):
+        pass
+
+    def take_snapshot(self,glue_edit):
+        pass
