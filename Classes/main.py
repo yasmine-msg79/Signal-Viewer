@@ -1,5 +1,5 @@
 
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout
 from PyQt5.QtCore import Qt
 import ChannelViewer
 import ControlPanel
@@ -12,8 +12,8 @@ class MainApp(QMainWindow):
         super().__init__()
 
         self.channel_viewer = ChannelViewer.ChannelViewer()
-        self.control_panel = ControlPanel.ControlPanel()
-        self.report_generator = ReportGenerate.ReportGenerate()
+        #self.control_panel = ControlPanel.MainApp()
+        #self.report_generator = ReportGenerate.RealTimeReportGeneratorWidget()
         self.signal_fetcher = SignalFetch.SignalFetch()
 
         self.setWindowTitle("Signal Viewer")
@@ -28,13 +28,15 @@ class MainApp(QMainWindow):
         layout = QHBoxLayout(central_widget)
 
         #left = QWidget()
+        #left.addWidget(self.signal_fetcher)
+        #left.addWidget(self.report_generator)
         right = QWidget()
         layout.addWidget(self.signal_fetcher)
         layout.addWidget(self.channel_viewer)
         layout.addWidget(right)
 
         self.signal_fetcher.setFixedWidth(200)
-        right.setFixedWidth(150)
+        self.signal_fetcher.setFixedWidth(150)
 
         layout.setStretch(0, 1)
         layout.setStretch(1, 3)
