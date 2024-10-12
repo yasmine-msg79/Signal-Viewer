@@ -14,10 +14,10 @@ class SignalReportGenerator(QWidget):
         super().__init__()
         self.setup_ui()
         self.initialize_real_time_data()
-        def setup_ui(self):
-        # Setting up the main layout and widgets
+    def setup_ui(self):
+
         self.layout = QVBoxLayout()
-        
+
         # Label to guide the user
         self.layout.addWidget(QLabel("Choose a Signal for Your Report:"))
 

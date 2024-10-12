@@ -1,12 +1,9 @@
-
 from PyQt5 import uic
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem,
-                             QLineEdit, QCheckBox, QFileDialog, QPushButton, QHBoxLayout, QFrame)
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QPushButton, QHBoxLayout, QFrame)
 import pyqtgraph as pg
-import pandas as pd
 
 
 def create_polar_plot():
@@ -93,10 +90,16 @@ class ChannelViewer(QWidget):
         self.ActiveSignals = [self.signal1, self.signal2, self.signal3]
 
     def display_signal(self, signal, viewer):
-        #viewer.clear()
         viewer.plot(signal, pen='r')
-        #plot_rect(signal,viewer)
-        #self.plot_polar(self,signal,viewer)
+
+        if viewer == 'graph_1':
+            self.graph_1.plot(signal['x'], signal['y'], pen='b')
+        elif viewer == 'graph_2':
+            self.graph_2.plot(signal['x'], signal['y'], pen='r')
+        elif viewer == 'polar_1':
+            plot_polar(signal, self.polar_1)
+        elif viewer == 'polar_2':
+            plot_polar(signal, self.polar_2)
 
     def clear_glue_editor(self):
         self.Glue_Editor.clear()
@@ -130,18 +133,36 @@ class ChannelViewer(QWidget):
             self.clear_button.hide()
             self.snapshot_button.hide()
             self.glue_editor.hide()
+            self.start_line = None
+            self.end_line = None
+            self.graph1.removeItem(self.start_line)
+            self.graph1.removeItem(self.end_line)
+            self.graph2.removeItem(self.start_line)
+            self.graph2.removeItem(self.end_line)
 
-    def calc_statistics(self, signal):
-        stats = []
-        return stats
-
-    def get_signal_stat(self, signal):
+    def select_segments(self, signal, start, end):
         pass
 
-    def select_segments(self,signal,start,end):
-        pass
     def glue_segments(self):
         pass
 
+    @staticmethod
+    def calc_statistics(signal):
+        mean_val = np.mean(signal['y'])
+        std_val = np.std(signal['y'])
+        max_val = np.max(signal['y'])
+        min_val = np.min(signal['y'])
+        duration = signal['x'][-1] - signal['x'][0]
+        return {"mean": mean_val, "std": std_val, "max": max_val, "min": min_val, "duration": duration}
+
+    def get_signal_stat(self, signal):
+        return self.calc_statistics(signal)
+
     def take_snapshot(self, glue_edit):
         pass
+
+    def get_snapshots(self):
+        return self.snapshots
+
+    def clear_snapshots(self):
+        self.snapshots.clear()
