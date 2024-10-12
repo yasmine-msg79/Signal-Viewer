@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>802</width>
-    <height>685</height>
+    <height>701</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -26,9 +26,9 @@
    <property name="geometry">
     <rect>
      <x>60</x>
-     <y>410</y>
+     <y>500</y>
      <width>711</width>
-     <height>141</height>
+     <height>200</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -50,7 +50,7 @@
      <x>60</x>
      <y>0</y>
      <width>711</width>
-     <height>171</height>
+     <height>230</height>
     </rect>
    </property>
    <property name="palette">
@@ -514,10 +514,10 @@
     <widget class="QFrame" name="graph1">
      <property name="geometry">
       <rect>
-       <x>0</x>
-       <y>0</y>
-       <width>711</width>
-       <height>151</height>
+       <x>-10</x>
+       <y>-10</y>
+       <width>731</width>
+       <height>231</height>
       </rect>
      </property>
      <property name="frameShape">
@@ -535,10 +535,10 @@
     <widget class="QFrame" name="polar1">
      <property name="geometry">
       <rect>
-       <x>0</x>
-       <y>0</y>
-       <width>711</width>
-       <height>151</height>
+       <x>-10</x>
+       <y>-10</y>
+       <width>731</width>
+       <height>231</height>
       </rect>
      </property>
      <property name="frameShape">
@@ -550,167 +550,13 @@
     </widget>
    </widget>
   </widget>
-  <widget class="QTableWidget" name="Statistics">
-   <property name="geometry">
-    <rect>
-     <x>60</x>
-     <y>600</y>
-     <width>711</width>
-     <height>81</height>
-    </rect>
-   </property>
-   <property name="alternatingRowColors">
-    <bool>true</bool>
-   </property>
-   <property name="textElideMode">
-    <enum>Qt::ElideNone</enum>
-   </property>
-   <property name="gridStyle">
-    <enum>Qt::SolidLine</enum>
-   </property>
-   <property name="rowCount">
-    <number>20</number>
-   </property>
-   <property name="columnCount">
-    <number>7</number>
-   </property>
-   <attribute name="horizontalHeaderVisible">
-    <bool>true</bool>
-   </attribute>
-   <attribute name="horizontalHeaderMinimumSectionSize">
-    <number>20</number>
-   </attribute>
-   <attribute name="horizontalHeaderDefaultSectionSize">
-    <number>95</number>
-   </attribute>
-   <attribute name="horizontalHeaderHighlightSections">
-    <bool>true</bool>
-   </attribute>
-   <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
-    <bool>true</bool>
-   </attribute>
-   <attribute name="horizontalHeaderStretchLastSection">
-    <bool>false</bool>
-   </attribute>
-   <attribute name="verticalHeaderCascadingSectionResizes">
-    <bool>true</bool>
-   </attribute>
-   <attribute name="verticalHeaderMinimumSectionSize">
-    <number>15</number>
-   </attribute>
-   <attribute name="verticalHeaderDefaultSectionSize">
-    <number>20</number>
-   </attribute>
-   <attribute name="verticalHeaderShowSortIndicator" stdset="0">
-    <bool>true</bool>
-   </attribute>
-   <row/>
-   <row/>
-   <row/>
-   <row/>
-   <row/>
-   <row/>
-   <row/>
-   <row/>
-   <row/>
-   <row/>
-   <row/>
-   <row/>
-   <row/>
-   <row/>
-   <row/>
-   <row/>
-   <row/>
-   <row/>
-   <row/>
-   <row/>
-   <column>
-    <property name="text">
-     <string>Signal</string>
-    </property>
-    <property name="font">
-     <font>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-   </column>
-   <column>
-    <property name="text">
-     <string>Mean</string>
-    </property>
-    <property name="font">
-     <font>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-   </column>
-   <column>
-    <property name="text">
-     <string>Std</string>
-    </property>
-    <property name="font">
-     <font>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-   </column>
-   <column>
-    <property name="text">
-     <string>Frequency</string>
-    </property>
-    <property name="font">
-     <font>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-   </column>
-   <column>
-    <property name="text">
-     <string>Duration</string>
-    </property>
-    <property name="font">
-     <font>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-   </column>
-   <column>
-    <property name="text">
-     <string>Min</string>
-    </property>
-    <property name="font">
-     <font>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-   </column>
-   <column>
-    <property name="text">
-     <string>Max</string>
-    </property>
-    <property name="font">
-     <font>
-      <weight>75</weight>
-      <italic>false</italic>
-      <bold>true</bold>
-      <kerning>true</kerning>
-     </font>
-    </property>
-   </column>
-  </widget>
   <widget class="QTabWidget" name="viewer2">
    <property name="geometry">
     <rect>
      <x>60</x>
-     <y>190</y>
+     <y>230</y>
      <width>711</width>
-     <height>171</height>
+     <height>230</height>
     </rect>
    </property>
    <property name="palette">
@@ -1174,10 +1020,10 @@
     <widget class="QFrame" name="graph2">
      <property name="geometry">
       <rect>
-       <x>0</x>
-       <y>0</y>
-       <width>711</width>
-       <height>151</height>
+       <x>-10</x>
+       <y>-10</y>
+       <width>731</width>
+       <height>231</height>
       </rect>
      </property>
      <property name="frameShape">
@@ -1195,10 +1041,10 @@
     <widget class="QFrame" name="polar2">
      <property name="geometry">
       <rect>
-       <x>0</x>
-       <y>0</y>
-       <width>711</width>
-       <height>151</height>
+       <x>-10</x>
+       <y>-10</y>
+       <width>731</width>
+       <height>231</height>
       </rect>
      </property>
      <property name="frameShape">
@@ -1210,56 +1056,46 @@
     </widget>
    </widget>
   </widget>
-  <widget class="QLabel" name="label">
+  <widget class="QPushButton" name="Snapshot">
    <property name="geometry">
     <rect>
-     <x>60</x>
-     <y>370</y>
-     <width>71</width>
-     <height>31</height>
+     <x>690</x>
+     <y>470</y>
+     <width>75</width>
+     <height>23</height>
     </rect>
    </property>
-   <property name="styleSheet">
-    <string notr="true">color: white;
-background-color: #0077c0;
-border-radius: 5px;
-font-weight: bold;
-height: 30px;</string>
-   </property>
-   <property name="frameShape">
-    <enum>QFrame::StyledPanel</enum>
-   </property>
-   <property name="frameShadow">
-    <enum>QFrame::Raised</enum>
-   </property>
    <property name="text">
-    <string>  Glue Editor</string>
+    <string>Snapshot</string>
    </property>
   </widget>
-  <widget class="QLabel" name="label_2">
+  <widget class="QPushButton" name="Clear">
    <property name="geometry">
     <rect>
-     <x>60</x>
-     <y>560</y>
-     <width>101</width>
-     <height>31</height>
+     <x>160</x>
+     <y>470</y>
+     <width>75</width>
+     <height>23</height>
     </rect>
    </property>
-   <property name="styleSheet">
-    <string notr="true">color: white;
-background-color: #0077c0;
-border-radius: 5px;
-font-weight: bold;
-height: 30px;</string>
+   <property name="text">
+    <string>Clear</string>
    </property>
-   <property name="frameShape">
-    <enum>QFrame::StyledPanel</enum>
-   </property>
-   <property name="frameShadow">
-    <enum>QFrame::Raised</enum>
+  </widget>
+  <widget class="QPushButton" name="toggle_glue">
+   <property name="geometry">
+    <rect>
+     <x>70</x>
+     <y>470</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
    </property>
    <property name="text">
-    <string>  Signal Statistics</string>
+    <string>Glue</string>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
    </property>
   </widget>
  </widget>
