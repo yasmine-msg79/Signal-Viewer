@@ -98,7 +98,6 @@ class SignalReportGenerator(QWidget):
         elements.append(title)
         elements.append(Spacer(1, 0.5 * inch))
 
-        # Introduction to the report
         intro = Paragraph("Here are the statistics for the signal you selected:", styles['Normal'])
         elements.append(intro)
         elements.append(Spacer(1, 0.2 * inch))
@@ -148,7 +147,7 @@ class SignalReportGenerator(QWidget):
         # Finalize the PDF document
         pdf.build(elements)
         
-        # Show a friendly message to the user
+        
         QMessageBox.information(self, "Success!", "Your report has been successfully created and saved!")
 
 if __name__ == '__main__':
