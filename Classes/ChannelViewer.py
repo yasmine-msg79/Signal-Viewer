@@ -1,6 +1,7 @@
 from PyQt5 import uic
 import numpy as np
 import matplotlib.pyplot as plt
+from PyQt5.QtGui import QPixmap, QPainter
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QPushButton, QHBoxLayout, QFrame)
 import pyqtgraph as pg
@@ -22,7 +23,7 @@ def plot_polar(signal, polar_plot):
     radius = signal['y']
 
     ax = polar_plot.figure.gca(polar=True)
-    #ax.clear()
+    # ax.clear()
     ax.plot(theta, radius)
     polar_plot.draw()
 
@@ -52,6 +53,7 @@ class ChannelViewer(QWidget):
         self.clear_button = self.findChild(QPushButton, "Clear")
         self.glue_button = self.findChild(QPushButton, "toggle_glue")
         self.snapshot_button = self.findChild(QPushButton, "Snapshot")
+        self.action_glue_button = self.findChild(QPushButton, "action_glue")
 
         self.graph_1.setLayout(QVBoxLayout())
         self.graph_2.setLayout(QVBoxLayout())
@@ -69,13 +71,15 @@ class ChannelViewer(QWidget):
         self.active_signals = []
         self.snapshots = []
         self.selected_segments = []
-        self.start_line = None
-        self.end_line = None
+        self.start_line1 = None
+        self.end_line1 = None
+        self.start_line2 = None
+        self.end_line2 = None
 
         # sample signals to test ui
-        self.signal1 = np.random.randn(160)
-        self.signal2 = np.random.randn(340)
-        self.signal3 = np.random.randn(190)
+        self.signal1 = self.generate_signal(160)
+        self.signal2 = self.generate_signal(340)
+        self.signal3 = self.generate_signal(190)
 
         self.display_signal(self.signal1, self.graph1)
         self.display_signal(self.signal2, self.graph2)
@@ -83,19 +87,29 @@ class ChannelViewer(QWidget):
 
         self.clear_button.hide()
         self.snapshot_button.hide()
+        self.action_glue_button.hide()
         self.glue_editor.hide()
         self.clear_button.clicked.connect(self.clear_glue_editor)
         self.glue_button.clicked.connect(self.toggle_glue_editor)
+        self.snapshot_button.clicked.connect(self.take_snapshot)
+        self.action_glue_button.clicked.connect(self.glue_action)
+
 
         self.ActiveSignals = [self.signal1, self.signal2, self.signal3]
 
+    def generate_signal(self, length):
+        """Generates a random signal with x and y data."""
+        x = np.linspace(0, 1000, length)  # Simulates a time axis
+        y = np.random.randn(length)  # Random values as signal data
+        return {'x': x, 'y': y}
+
     def display_signal(self, signal, viewer):
-        viewer.plot(signal, pen='r')
+        viewer.plot(signal, pen='b')
 
         if viewer == 'graph_1':
-            self.graph_1.plot(signal['x'], signal['y'], pen='b')
+            self.graph_1.plot(signal, pen='b')
         elif viewer == 'graph_2':
-            self.graph_2.plot(signal['x'], signal['y'], pen='r')
+            self.graph_2.plot(signal, pen='r')
         elif viewer == 'polar_1':
             plot_polar(signal, self.polar_1)
         elif viewer == 'polar_2':
@@ -104,23 +118,34 @@ class ChannelViewer(QWidget):
     def clear_glue_editor(self):
         self.Glue_Editor.clear()
         self.selected_segments.clear()
-        if self.start_line:
-            self.Glue_Editor.removeItem(self.start_line)
-            self.Glue_Editor.removeItem(self.end_line)
-            self.start_line = None
-            self.end_line = None
+        if self.start_line1:
+            self.graph1.removeItem(self.start_line1)
+            self.graph1.removeItem(self.end_line1)
+            self.graph2.removeItem(self.start_line2)
+            self.graph2.removeItem(self.end_line2)
+            self.start_line1 = None
+            self.end_line1 = None
+            self.start_line2 = None
+            self.end_line2 = None
+            self.add_segment_selection_lines()
+            self.clear_snapshots()
             print("editor cleared")
 
     def add_segment_selection_lines(self):
-        if self.start_line is None and self.end_line is None:
-            self.start_line = pg.InfiniteLine(pos=10, angle=90, movable=True)
-            self.start_line.isVisible()
-            self.end_line = pg.InfiniteLine(pos=50, angle=90, movable=True)
-            self.end_line.isVisible()
-            self.graph1.addItem(self.start_line)
-            self.graph1.addItem(self.end_line)
-            self.graph2.addItem(self.start_line)
-            self.graph2.addItem(self.end_line)
+        if self.start_line1 is None and self.end_line1 is None and self.start_line2 is None and self.end_line2 is None:
+            self.start_line1 = pg.InfiniteLine(pos=10, angle=90, movable=True, pen=pg.mkPen(color='r', width=2))
+            self.end_line1 = pg.InfiniteLine(pos=50, angle=90, movable=True, pen=pg.mkPen(color='g', width=2))
+            self.start_line2 = pg.InfiniteLine(pos=10, angle=90, movable=True, pen=pg.mkPen(color='r', width=2))
+            self.end_line2 = pg.InfiniteLine(pos=50, angle=90, movable=True, pen=pg.mkPen(color='g', width=2))
+
+            self.graph1.addItem(self.start_line1)
+            self.graph1.addItem(self.end_line1)
+            self.graph2.addItem(self.start_line2)
+            self.graph2.addItem(self.end_line2)
+
+    def glue_action(self):
+        self.select_segments(self.signal1, self.signal2)
+        self.glue_segments()
 
     def toggle_glue_editor(self):
         if self.glue_button.isChecked():
@@ -128,23 +153,55 @@ class ChannelViewer(QWidget):
             self.add_segment_selection_lines()
             self.clear_button.show()
             self.snapshot_button.show()
+            self.action_glue_button.show()
         else:
             self.clear_glue_editor()
             self.clear_button.hide()
             self.snapshot_button.hide()
+            self.action_glue_button.hide()
             self.glue_editor.hide()
-            self.start_line = None
-            self.end_line = None
-            self.graph1.removeItem(self.start_line)
-            self.graph1.removeItem(self.end_line)
-            self.graph2.removeItem(self.start_line)
-            self.graph2.removeItem(self.end_line)
+            self.graph1.removeItem(self.start_line1)
+            self.graph1.removeItem(self.end_line1)
+            self.graph2.removeItem(self.start_line2)
+            self.graph2.removeItem(self.end_line2)
 
-    def select_segments(self, signal, start, end):
-        pass
+    def select_segments(self, signal1, signal2):
+        start_index1 = np.searchsorted(signal1['x'], self.start_line1.value())
+        end_index1 = np.searchsorted(signal1['x'], self.end_line1.value())
+        start_index2 = np.searchsorted(signal2['x'], self.start_line2.value())
+        end_index2 = np.searchsorted(signal2['x'], self.end_line2.value())
 
-    def glue_segments(self):
-        pass
+        segment1 = {'x': signal1['x'][start_index1:end_index1], 'y': signal1['y'][start_index1:end_index1]}
+        segment2 = {'x': signal2['x'][start_index2:end_index2], 'y': signal2['y'][start_index2:end_index2]}
+
+        self.selected_segments.append(segment1)
+        self.selected_segments.append(segment2)
+
+    def glue_segments(self, gap=None):
+        seg1, seg2 = self.selected_segments[:2]
+
+        original_gap = seg2['x'][0] - seg1['x'][-1]
+
+        if gap:
+            actual_gap = gap
+        else:
+            actual_gap = original_gap
+
+        print(f"original: {original_gap}, actual: {actual_gap}")
+        if actual_gap > 0:
+            interpolated_x = np.linspace(seg1['x'][-1], seg2['x'][0], 50)
+            interpolated_y = np.interp(interpolated_x, seg1['x'][-1], seg2['x'][0], seg1['y'][-1], seg2['y'][0])
+            glued_x = np.concatenate((seg1['x'], interpolated_x, seg2['x']))
+            glued_y = np.concatenate((seg1['y'], interpolated_y, seg2['y']))
+        else:
+            glued_x = np.concatenate((seg1['x'], seg2['x']))
+            glued_y = np.concatenate((seg1['y'], seg2['y']))
+
+        self.Glue_Editor.clear()
+        self.Glue_Editor.plot(glued_x, glued_y, pen='g')
+
+        self.selected_segments.clear()
+        print("glued and plotted")
 
     @staticmethod
     def calc_statistics(signal):
@@ -158,11 +215,21 @@ class ChannelViewer(QWidget):
     def get_signal_stat(self, signal):
         return self.calc_statistics(signal)
 
-    def take_snapshot(self, glue_edit):
-        pass
+    def take_snapshot(self):
+        pixmap = QPixmap(self.Glue_Editor.size())
+        painter = QPainter(pixmap)
+        self.Glue_Editor.render(painter)
+        painter.end()
+
+        snapshot_name = f"snapshot_{len(self.snapshots) + 1}.png"
+        pixmap.save(snapshot_name)
+        self.snapshots.append({'name': snapshot_name, 'image': pixmap})
+        print(f"Snapshot saved: {snapshot_name}")
+        print(f"snapshots:{self.snapshots}")
 
     def get_snapshots(self):
         return self.snapshots
 
     def clear_snapshots(self):
         self.snapshots.clear()
+        print("snapshots cleared")

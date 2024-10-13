@@ -1069,6 +1069,19 @@
     <string>Snapshot</string>
    </property>
   </widget>
+     <widget class="QPushButton" name="action_glue">
+   <property name="geometry">
+    <rect>
+     <x>600</x>
+     <y>470</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Glue Signals</string>
+   </property>
+  </widget>
   <widget class="QPushButton" name="Clear">
    <property name="geometry">
     <rect>
@@ -1092,7 +1105,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Glue</string>
+    <string>Show/Hide</string>
    </property>
    <property name="checkable">
     <bool>true</bool>
