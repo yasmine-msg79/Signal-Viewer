@@ -42,7 +42,7 @@ class SignalReportGenerator(QWidget):
     def initialize_real_time_data(self):
         # Initializing data storage for real-time signals (this part is kept for stats generation)
         self.signal_data = {
-            "ECG": [], "EMG": [], "EEG": []
+            "Signal": []
         }
 
         # Timer to simulate real-time data updates every 500 milliseconds
@@ -52,13 +52,12 @@ class SignalReportGenerator(QWidget):
 
     def update_real_time_data(self):
         # Simulating the generation of new data points
-        for signal_type in self.signal_data.keys():
-            new_value = random.uniform(-1, 1)  # Simulated real-time data value
-            self.signal_data[signal_type].append(new_value)
+        new_value = random.uniform(-1, 1)  # Simulated real-time data value
+        self.signal_data["Signal"].append(new_value)
 
-            # Limit the length of the data array for memory management
-            if len(self.signal_data[signal_type]) > 1000:
-                self.signal_data[signal_type].pop(0)
+        # Limit the length of the data array for memory management
+        if len(self.signal_data["Signal"]) > 1000:
+            self.signal_data["Signal"].pop(0)
 
     def generate_report(self):
         # Get selected snapshots from the list
@@ -69,17 +68,19 @@ class SignalReportGenerator(QWidget):
             QMessageBox.warning(self, "No Selection", "Please select at least one snapshot.")
             return
 
-        # Simulated signal data for report (You can modify this part to include actual data)
-        selected_signal_data = self.signal_data["ECG"]  # Example using ECG signal for stats
+        # Fetch the latest data for the chosen signal (using 'Signal')
+        selected_signal_data = self.signal_data["Signal"]
+
+        # Calculate basic statistics for the report
         mean = sum(selected_signal_data) / len(selected_signal_data) if selected_signal_data else 0
         std_dev = (sum((x - mean) ** 2 for x in selected_signal_data) / len(selected_signal_data)) ** 0.5 if selected_signal_data else 0
         min_value = min(selected_signal_data, default=0)
         max_value = max(selected_signal_data, default=0)
-        duration = len(selected_signal_data) * 0.5
-
-        # Prepare stats
+        duration = len(selected_signal_data) * 0.5  # Assuming each data point represents 0.5 seconds
+        
+        # Prepare stats for the report
         stats = [{
-            "Signal": "ECG",
+            "Signal": "Signal",
             "Mean": mean,
             "Std Dev": std_dev,
             "Min": min_value,
@@ -105,7 +106,7 @@ class SignalReportGenerator(QWidget):
         elements.append(intro)
         elements.append(Spacer(1, 0.2 * inch))
 
-        # Statistics table (using ECG signal as an example)
+        # Statistics table (using 'Signal')
         table_data = [["Signal Type", "Mean", "Std Dev", "Min", "Max", "Duration (s)"]]
         for stat in stats:
             table_data.append([
@@ -161,10 +162,3 @@ if __name__ == '__main__':
     report_widget.resize(400, 300)
     report_widget.show()
     sys.exit(app.exec_())
-
-      
-       
-     
-        
-
-        
