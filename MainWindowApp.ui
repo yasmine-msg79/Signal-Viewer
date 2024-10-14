@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1384</width>
-    <height>759</height>
+    <height>821</height>
    </rect>
   </property>
   <property name="font">
@@ -40,6 +40,18 @@ color:rgb(255, 255, 255);
     <item>
      <widget class="QWidget" name="rightwidget" native="true">
       <layout class="QVBoxLayout" name="verticalLayout_2">
+       <property name="leftMargin">
+        <number>9</number>
+       </property>
+       <property name="topMargin">
+        <number>9</number>
+       </property>
+       <property name="rightMargin">
+        <number>9</number>
+       </property>
+       <property name="bottomMargin">
+        <number>9</number>
+       </property>
        <item>
         <widget class="QPushButton" name="importButton">
          <property name="font">
@@ -97,6 +109,135 @@ background-color:  rgb(0, 115, 173);
            <width>25</width>
            <height>25</height>
           </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="connectButton">
+         <property name="font">
+          <font>
+           <family>-apple-system</family>
+           <pointsize>16</pointsize>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton{
+  appearance: button;
+  backface-visibility: hidden;
+  background-color: rgb(0, 154, 231);
+  border-radius: 6px;
+  border-width: 0;
+  box-shadow: rgba(50, 50, 93, .1) 0 0 0 1px inset,rgba(50, 50, 93, .1) 0 2px 5px 0,rgba(0, 0, 0, .07) 0 1px 1px 0;
+  box-sizing: border-box;
+  color: #fff;
+  cursor: pointer;
+  font-family: -apple-system,system-ui,&quot;Segoe UI&quot;,Roboto,&quot;Helvetica Neue&quot;,Ubuntu,sans-serif;
+  font-size: 100%;
+  height: 44px;
+  line-height: 1.15;
+  margin: 12px 0 0;
+  outline: none;
+  overflow: hidden;
+  padding: 0 10px;
+  position: relative;
+  text-align: center;
+  text-transform: none;
+  transform: translateZ(0);
+  transition: all .2s,box-shadow .08s ease-in;
+  touch-action: manipulation;
+  width: 100%;
+}
+QPushButton:hover{
+background-color: rgb(0, 115, 173);
+}
+QPushButton:pressed{
+background-color:  rgb(0, 115, 173);
+}
+</string>
+         </property>
+         <property name="text">
+          <string>Connect</string>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>../../../0-MostafaMousaControl_PanelTask/Vital-Signals-Multichannel-Viewer/Vital-Signals-Multichannel-Viewer-main/ui/Icons/upload-.svg</normaloff>../../../0-MostafaMousaControl_PanelTask/Vital-Signals-Multichannel-Viewer/Vital-Signals-Multichannel-Viewer-main/ui/Icons/upload-.svg</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>25</width>
+           <height>25</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="Line" name="line_8">
+         <property name="font">
+          <font>
+           <pointsize>100</pointsize>
+           <weight>50</weight>
+           <bold>false</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">/* Line style */
+
+  /* Set the width of the line */
+  width: 20px;
+
+  /* Set the height of the line */
+  height: 5px;
+
+  /* Set the background color of the line */
+  background-color: #3a3b3c;
+
+  /* Set the border of the line */
+  border: 10px;
+
+  /* Set the border radius of the line */
+  border-radius:5px;
+
+
+
+</string>
+         </property>
+         <property name="lineWidth">
+          <number>50</number>
+         </property>
+         <property name="midLineWidth">
+          <number>100</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="signal_Link_Label">
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">  position: relative;
+  display: inline-block;
+  height: 32px;
+  width: 210px;
+  margin: 0;
+  padding: 0;
+  background-color: #fff;
+  border: none;
+  border-radius: 10px;
+  color:#0d0d0d;</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="placeholderText">
+          <string>Signal Link</string>
          </property>
         </widget>
        </item>
@@ -1641,6 +1782,69 @@ background-color:  rgb(0, 115, 173);
          </property>
          <property name="text">
           <string>Glue</string>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>25</width>
+           <height>25</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="snapshot_Button">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Maximum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="font">
+          <font>
+           <family>-apple-system</family>
+           <pointsize>16</pointsize>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">QPushButton{
+  appearance: button;
+  backface-visibility: hidden;
+  background-color:  rgb(0, 154, 231);
+  border-radius: 6px;
+  border-width: 0;
+  box-shadow: rgba(50, 50, 93, .1) 0 0 0 1px inset,rgba(50, 50, 93, .1) 0 2px 5px 0,rgba(0, 0, 0, .07) 0 1px 1px 0;
+  box-sizing: border-box;
+  color: #fff;
+  cursor: pointer;
+  font-family: -apple-system,system-ui,&quot;Segoe UI&quot;,Roboto,&quot;Helvetica Neue&quot;,Ubuntu,sans-serif;
+  font-size: 100%;
+  height: 44px;
+  line-height: 1.15;
+  margin: 12px 0 0;
+  outline: none;
+  overflow: hidden;
+  padding: 0 25px;
+  position: relative;
+  text-align: center;
+  text-transform: none;
+  transform: translateZ(0);
+  transition: all .2s,box-shadow .08s ease-in;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  width: 100%;
+}
+QPushButton:hover{
+background-color:  rgb(0, 115, 173);
+}
+QPushButton:pressed{
+background-color:  rgb(0, 115, 173);
+}</string>
+         </property>
+         <property name="text">
+          <string>Snapshot</string>
          </property>
          <property name="iconSize">
           <size>
