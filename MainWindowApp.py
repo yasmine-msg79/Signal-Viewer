@@ -1,3 +1,74 @@
+# Task 1 – Multi-Port, Multi-Channel Signal Viewer 
+# Introduction: Monitoring the vital signals is a crucial aim in any ICU room.  
+# Description: Using Python and Qt, develop a desktop application that illustrates multi-port, multi-channel signal viewer 
+# that has the following features: - The user can browse his PC to open any signal file. Each group will need to provide samples from any three different 
+# medical signals (e.g. ECG, EMG, EEG,…etc). Each signal type should have an example for normal signal and abnormal 
+# signal. The user should also be able to connect to some website that emits a signal in real time, read the emitted signal 
+# and plot it. Each group is responsible for searching and connecting at least one of these websites. The websites are not 
+# to be repeated among the different groups and will be allocated for the group based on “first-to-deliver first
+# allocated”. - Your application should contain two main identical graphs. The user can open different signals in each graph. i.e. each 
+# graph has to have its own controls. The user can run each graph independently or link both graphs via a button in the 
+# UI. When the graphs are linked (i.e. linked option is ON), the two graphs must display the same time frames, signal 
+# speed, and same viewport if zoomed or panned (i.e. if the user zoom on one graph, the other graph should apply the 
+# same exact zoom as well). If the link of the two graphs is disabled, then each graph can run its signals independently. - Your application should also provide a non-rectangle graph. Pick any non-rectangle graph of your own and be ready to 
+# open a suitable signal that can be displayed on this graph in cine mode (Please, think in how this signal should be 
+# displayed in the cine mode. This is not a trivial feature!). - In any of the three graphs, when the user opens a signal file, the signal should show up in the cine mode (i.e. a running 
+# signal through time, similar to the one you see in the ICU monitors). Do NOT open a signal in a static mode. If the 
+# signal ends, there should be a rewind option to either stop the signal or start running it again from the beginning. - The user can manipulate the running signals through UI elements that provide the below function: 
+# • Change color, 
+# • Add a label/title for each signal, 
+# • Show/hide, 
+# • Control/customize the cine speed, 
+# • Zoom in/out, 
+# • Pause/play/rewind(on/off),
+#  • Scroll/Pan the signal in any direction (left, top, right, bottom). Scroll is performed through sliders, and pan is 
+# performed through the mouse movements. 
+# • Move any signal from one graph to the other. 
+# During these manipulations, you need to take care of the boundary conditions! Intuitively, no scroll/pan should be 
+# allowed before your signal starts or after it ends or above its maximum values or below its minimum values. No user 
+# expects to see an empty graph coz he scrolled the signal too much to the top for example. Note: Ofcourse, all 
+# manipulations will be applied on all the opened signals (viewed or hidden). - Signal Glue: The user should be able to cut any two parts of any two signals, each displayed in one of the two 
+# rectangular graphs and glue them in a third graph using signal interpolation. The different parameters of the glue 
+# operation should be customizable by the user. These glue parameters are window start and size of each signal, signals 
+# gap (positive distance between the two signals) or overlap (negative distance between the two signals), and 
+# interpolation order.  - Exporting & Reporting: For the sake of reporting the results of the glue operation, the user can construct a report of 
+# one or more snapshots for the glue graph sent to the report along with some data statistics on the glued signal to a 
+# pdf file. You need to generate the pdf contents via the code. i.e. Do NOT take a snapshot image and convert it to a pdf 
+# file! 
+# • Data statistics can be mean, std, duration, min and max values for each signal. These numbers should be 
+# organized in a nice table in the pdf file. The report itself should be organized to have a nice layout. The report can 
+# be single or multi-page. Prepare samples of your reports for different number of signals and snapshots. 
+# Code Practice: - Use proper variable and function names. If I do not understand what your variable is roughly doing without asking for 
+# your explanation, then this is NOT a proper name! Examples for non-proper names: x, y, counter, ss, ii, s_i,…etc. Each 
+# non-proper variable or function name will be penalized with -10% of the whole task grade. 
+# General Notes: - This is a task for an engineer who has had reasonable experience with software programs. And thus, s/he is expected 
+# to provide convenient, user-friendly software. Do NOT invent a feature or a user-interaction that you had never seen 
+# before in another software. Do NOT INVENT but rather IMMITAE what you have experienced before with software. If 
+# you feel you are very smart that your feature is completely new and no one thought about or saw it before, then we 
+# do NOT want to see it either! During delivery, you will always be asked this question “where did you see this feature 
+# before?” either for features related to signal viewers or related to dealing with the computer or software in general. - If you are new to signal viewers, try to download a couple and experience them. There are tons of free downloadable 
+# viewers on the internet. Not seeing a viewer before is NOT an excuse for the previous note. - Any feature in your program should have a default value. Never ask the user to provide you with an initial value for 
+# any of your parameters. - Any “or” for the user means “and” for the developer. If the user can do X or Y, then the developer is expected to 
+# provide the user with the full functionality of features X and Y. - You can use any toolbox to read or process the signal underneath but you have to do your own UI and not use any UI 
+# elements from any library or toolkit. - Please, note that the number of opened signals in any graph is not fixed/limited. i.e. Don't assume you will open 5 
+# signals at maximum and prepare their controls accordingly.
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+# ************************************** Importing Libraries **************************************
+
 from PyQt6 import QtCore, QtWidgets
 from PyQt6.QtWidgets import QFileDialog, QMessageBox, QColorDialog, QListWidgetItem, QMessageBox, QDialogButtonBox
 import wfdb
@@ -14,10 +85,18 @@ import os
 import qdarkstyle
 import random
 from PyQt6.QtCore import Qt
+# Added new libraries
+from PyQt6.QtWidgets import QInputDialog
+import requests
+from PyQt6.QtWidgets import QInputDialog, QMessageBox
 
 
 
 class MainWindow(QtWidgets.QMainWindow):
+    
+# ************************************** Start  the main  functions for our application   **************************************
+
+
 
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
@@ -56,7 +135,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Load the UI Page
         self.ui = uic.loadUi('MainWindowApp.ui', self)
         self.setWindowTitle("Multi-Channel Signal Viewer Team 1")
-        self.setWindowIcon(QIcon("Icons/ECG.png"))
+        # self.setWindowIcon(QIcon("Icons/ECG.png"))
         self.lookup = {"graph1": self.graph1, "graph2": self.graph2}
         self.current_graph = self.graph1  # default value
         self.current_graph.clear()
@@ -85,9 +164,10 @@ class MainWindow(QtWidgets.QMainWindow):
         """)
 
         # Connect signals to slots
-        self.timer.timeout.connect(self.update_plot_data)
+
         self.importButton.clicked.connect(self.browse)
-        self.reportButton.clicked.connect(self.generate_signal_report)
+        self.connectButton.clicked.connect(self.connectFunction)
+        self.timer.timeout.connect(self.update_plot_data)
         self.playButton.clicked.connect(self.toggle_play_pause)
         self.linkButton.clicked.connect(self.link_graphs)
         self.hideButton.clicked.connect(self.hide_Show_graph)
@@ -95,6 +175,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.zoomIn.clicked.connect(self.zoom_in)
         self.zoomOut.clicked.connect(self.zoom_out)
         self.glue_Button.clicked.connect(self.glue_graphs)
+        self.snapshot_Button.clicked.connect(self.take_snapshot)
+        self.reportButton.clicked.connect(self.generate_signal_report)
+        
 
         # Set speed slider properties
         self.speedSlider.setMinimum(0)
@@ -124,6 +207,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # Connect label text input to channel label change
         self.addLabelGraph1.returnPressed.connect(self.change_channel_label)
         self.addLabelGraph2.returnPressed.connect(self.change_channel_label)
+        self.signal_Link_Label.returnPressed.connect(self.signal_Link)
+
 
         # Connect hide list items to item checking/unchecking
         self.hideList1.itemChanged.connect(self.on_item_checked)
@@ -175,11 +260,13 @@ class MainWindow(QtWidgets.QMainWindow):
         clear_shortcut.activated.connect(self.hide_Show_graph)
 
 
-
+                
                 
                         
+                
 
 
+                
 
 
 
@@ -408,39 +495,106 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # ************************************** Plot Graphs **************************************
     
+
     def browse(self):
-        file_filter = "Raw Data (*.csv *.txt *.xls *.hea *.dat *.rec)"
-        self.file_path, _ = QtWidgets.QFileDialog.getOpenFileName(
-            None, 'Open Signal File', './', filter=file_filter)
+            file_filter = "Raw Data (*.csv *.txt *.xls *.hea *.dat *.rec)"
+            self.file_path, _ = QtWidgets.QFileDialog.getOpenFileName(
+                None, 'Open Signal File', './', filter=file_filter)
 
-        if self.current_graph == self.graph1 and self.file_path:
-            self.graph1_signals_paths.append(self.file_path)
-            self.channelsGraph1.addItem(
-                f"Channel{len(self.signals['graph1']) + 1}")
-            self.fill_list1()
-            self.signals_info["graph1"].append([True, None, None])
+            if self.current_graph == self.graph1 and self.file_path:
+                self.graph1_signals_paths.append(self.file_path)
+                self.channelsGraph1.addItem(
+                    f"Channel{len(self.signals['graph1']) + 1}")
+                self.fill_list1()
+                self.signals_info["graph1"].append([True, None, None])
 
-        elif self.current_graph == self.graph2 and self.file_path:
-            self.graph2_signals_paths.append(self.file_path)
-            self.channelsGraph2.addItem(
-                f"Channel{len(self.signals['graph2']) + 1}")
-            self.fill_list2()
-            self.signals_info["graph2"].append([True, None, None])
+            elif self.current_graph == self.graph2 and self.file_path:
+                self.graph2_signals_paths.append(self.file_path)
+                self.channelsGraph2.addItem(
+                    f"Channel{len(self.signals['graph2']) + 1}")
+                self.fill_list2()
+                self.signals_info["graph2"].append([True, None, None])
 
-        elif self.current_graph == [self.graph1, self.graph2] and self.file_path:
-            self.graph1_signals_paths.append(self.file_path)
-            self.graph2_signals_paths.append(self.file_path)
-            self.channelsGraph1.addItem(
-                f"Channel{len(self.signals['graph1']) + 1}")
-            self.fill_list1()
-            self.channelsGraph2.addItem(
-                f"Channel{len(self.signals['graph2']) + 1}")
-            self.fill_list2()
-            self.signals_info["graph1"].append([True, None, None])
-            self.signals_info["graph2"].append([True, None, None])
+            elif self.current_graph == [self.graph1, self.graph2] and self.file_path:
+                self.graph1_signals_paths.append(self.file_path)
+                self.graph2_signals_paths.append(self.file_path)
+                self.channelsGraph1.addItem(
+                    f"Channel{len(self.signals['graph1']) + 1}")
+                self.fill_list1()
+                self.channelsGraph2.addItem(
+                    f"Channel{len(self.signals['graph2']) + 1}")
+                self.fill_list2()
+                self.signals_info["graph1"].append([True, None, None])
+                self.signals_info["graph2"].append([True, None, None])
 
-        if self.file_path:
-            self.open_file(self.file_path)
+            if self.file_path:
+                self.open_file(self.file_path)
+
+# I Want to Add a Feature that if The user want to clicked to connectButton ask him to add the link of the signal from website that emits a signal in real time, in the signal_Link_Label and after read the emitted signal and plot it as the browse button.
+# Q i want example for some api emit signals !
+# A     
+    
+    def signal_Link(self):
+        """
+        Prompts the user to enter the link of the signal from a website that emits a signal in real time.
+        """
+        link, ok = QInputDialog.getText(self, 'Enter Signal Link', 'Enter the link of the signal:')
+        if ok and link:
+            self.signal_Link_Label.setText(link)
+            return link
+        return None
+
+    def connectFunction(self):
+        """
+        Connects to the signal source from the provided link, reads the emitted signal, and plots it.
+        """
+        link = self.signal_Link()
+        if not link:
+            return
+
+        try:
+            # Read the signal from the link
+            response = requests.get(link, stream=True)
+            response.raise_for_status()
+        except requests.RequestException as e:
+            QMessageBox.critical(self, "Connection Error", f"Failed to connect to the signal source: {e}")
+            return
+
+        time_data = []
+        amplitude_data = []
+
+        for line in response.iter_lines():
+            if line:
+                data = line.decode('utf-8')
+                try:
+                    value = float(data)
+                    amplitude_data.append(value)
+                    time_data.append(len(time_data) * 0.01)  # Simulate time data
+                except ValueError:
+                    continue
+
+        # Plot the signal on graph1
+        pen = pg.mkPen(color=(255, 0, 0), width=2)
+        self.plot_signal(self.graph1, (time_data, amplitude_data), pen)
+
+        # Update the signals data structure
+        self.signals["graph1"].append(((time_data, amplitude_data), len(time_data)))
+        self.signals_lines["graph1"].append(None)
+        self.signals_info["graph1"].append({'label': 'Real-time Signal', 'color': (255, 0, 0)})
+
+        # Update the channel selection combo box
+        self.channelsGraph1.addItem(f"Channel {len(self.signals['graph1'])}")
+
+        # Update the play/pause state
+        self.is_playing[0]["is_playing"] = True
+        self.playButton.setText('Pause')
+        self.set_icon("Icons/pause.svg")
+
+        if not self.timer.isActive():
+            self.timer.start(50) 
+    
+
+
 
     def open_file(self, path: str):
         self.time = []
@@ -632,6 +786,23 @@ class MainWindow(QtWidgets.QMainWindow):
         for graph in self.is_playing:
             graph["is_playing"] = True
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # ************************************** Transfer signals **************************************
 
 
@@ -787,18 +958,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 self.is_playing[0]["is_playing"] = True
                 self.update_after_transfer("graph1", i, item_name)
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -991,29 +1150,19 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 # ************************************** Colors, Labels, and Legends **************************************
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     def change_channel_label(self):
@@ -1108,51 +1257,21 @@ class MainWindow(QtWidgets.QMainWindow):
                     channels_color[selected_channel_index - 1] = new_color
                     signals_lines[selected_channel_index - 1].setPen(new_color)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    #  Glue Signals
+    def glue_graphs(self):  
+       pass
 
 
 
 
 # ************************************** Snapshot and PDF Report **************************************
-
-    #  Glue Signals
-    def glue_graphs(self):                      
-       pass
        
-          
+    # Snapshot 
+    def generate_signal_report(self):
+        pass
 
+    def take_snapshot(self):
+        print("SnapShot Done")
 
 
     # Report Generation
@@ -1163,152 +1282,154 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 
+
+
 # UnUsed Functions
 
 
-    def take_snapshot(self):
-        pass
-        # index = self.graphSelection.currentIndex()
-        # graph_items = {
-        #     0: self.graph1.plotItem,
-        #     1: self.graph2.plotItem
-        # }
+    # def take_snapshot(self):
+    #     pass
+    #     # index = self.graphSelection.currentIndex()
+    #     # graph_items = {
+    #     #     0: self.graph1.plotItem,
+    #     #     1: self.graph2.plotItem
+    #     # }
 
-        # if index in graph_items:
-        #     graph_item = graph_items[index]
-        #     screenshot = ImageExporter(graph_item)
-        #     screenshot.parameters()['width'] = 640
-        #     screenshot.parameters()['height'] = 480
-        #     screenshot_path = f"Screenshot_{len(self.snapshoot_data)}.png"
-        #     screenshot.export(screenshot_path)
-        #     self.snapshoot_data.append(screenshot_path)
-        # else:
-        #     QtWidgets.QMessageBox.warning(
-        #         self, 'Warning', 'Please select a graph')
+    #     # if index in graph_items:
+    #     #     graph_item = graph_items[index]
+    #     #     screenshot = ImageExporter(graph_item)
+    #     #     screenshot.parameters()['width'] = 640
+    #     #     screenshot.parameters()['height'] = 480
+    #     #     screenshot_path = f"Screenshot_{len(self.snapshoot_data)}.png"
+    #     #     screenshot.export(screenshot_path)
+    #     #     self.snapshoot_data.append(screenshot_path)
+    #     # else:
+    #     #     QtWidgets.QMessageBox.warning(
+    #     #         self, 'Warning', 'Please select a graph')
 
-    def add_snapshots_to_pdf(self, pdf):
-        # Capture the snapshots
-        snap_data = self.snapshoot_data
+    # def add_snapshots_to_pdf(self, pdf):
+    #     # Capture the snapshots
+    #     snap_data = self.snapshoot_data
 
-        # Iterate over each snapshot
-        for graph_image in snap_data:
-            # Add the graph name to the PDF
-            # Extract the image file name
-            image_name = os.path.basename(graph_image[:12])
+    #     # Iterate over each snapshot
+    #     for graph_image in snap_data:
+    #         # Add the graph name to the PDF
+    #         # Extract the image file name
+    #         image_name = os.path.basename(graph_image[:12])
 
-            pdf.cell(200, 10, text=image_name)
-            pdf.ln(10)
+    #         pdf.cell(200, 10, text=image_name)
+    #         pdf.ln(10)
 
-            pdf.image(graph_image, x=10, w=190)
-            pdf.ln(10)
+    #         pdf.image(graph_image, x=10, w=190)
+    #         pdf.ln(10)
 
-    def create_report(self, graph_widget, pdf_title="Signal_Report.pdf"):
-        self.folder_path, _ = QFileDialog.getSaveFileName(
-            None, 'Save the signal file', None, 'PDF Files (*.pdf)')
-        if self.folder_path:
-            self.pdf = FPDF()
-            self.pdf.add_page()
-            self.add_page_border()
-            self.add_title("Signal Report")
-            self.add_logos()
-            self.add_snapshots_to_pdf(self.pdf)
-            self.add_statistics_tables()
-            self.save_pdf()
+    # def create_report(self, graph_widget, pdf_title="Signal_Report.pdf"):
+    #     self.folder_path, _ = QFileDialog.getSaveFileName(
+    #         None, 'Save the signal file', None, 'PDF Files (*.pdf)')
+    #     if self.folder_path:
+    #         self.pdf = FPDF()
+    #         self.pdf.add_page()
+    #         self.add_page_border()
+    #         self.add_title("Signal Report")
+    #         self.add_logos()
+    #         self.add_snapshots_to_pdf(self.pdf)
+    #         self.add_statistics_tables()
+    #         self.save_pdf()
 
-    def add_page_border(self):
-        self.pdf.set_draw_color(0, 0, 0)  # Set line color to black
-        # Draw a border around the entire page
-        self.pdf.rect(1, 1, self.pdf.w, self.pdf.h)
+    # def add_page_border(self):
+    #     self.pdf.set_draw_color(0, 0, 0)  # Set line color to black
+    #     # Draw a border around the entire page
+    #     self.pdf.rect(1, 1, self.pdf.w, self.pdf.h)
 
-    def add_title(self, title):
-        self.pdf.set_font("times", "B", size=25)
-        self.pdf.cell(200, 5, txt=title, align="C")
-        # Reset the font to the previous settings
-        self.pdf.set_font("times", size=12)
+    # def add_title(self, title):
+    #     self.pdf.set_font("times", "B", size=25)
+    #     self.pdf.cell(200, 5, txt=title, align="C")
+    #     # Reset the font to the previous settings
+    #     self.pdf.set_font("times", size=12)
 
-    def add_logos(self):
-        pass
-        # self.pdf.image('LOGO/asset-cairo.png', 2, 3, 40, 40)
-        # self.pdf.image('LOGO/Asset-SBE.png', 160, 3, 40, 40)
-        # self.pdf.ln(30)
+    # def add_logos(self):
+    #     pass
+    #     # self.pdf.image('LOGO/asset-cairo.png', 2, 3, 40, 40)
+    #     # self.pdf.image('LOGO/Asset-SBE.png', 160, 3, 40, 40)
+    #     # self.pdf.ln(30)
 
-    def add_statistics_tables(self):
-        graph_names = ["graph1", "graph2"]
+    # def add_statistics_tables(self):
+    #     graph_names = ["graph1", "graph2"]
 
-        for graph_name in graph_names:
-            statistics = self.get_signal_statistics(graph_name)
+    #     for graph_name in graph_names:
+    #         statistics = self.get_signal_statistics(graph_name)
 
-            if statistics:
-                self.pdf.cell(200, 10, text=f"Statistics for {graph_name}")
-                self.pdf.ln(10)  # Move to the next line
+    #         if statistics:
+    #             self.pdf.cell(200, 10, text=f"Statistics for {graph_name}")
+    #             self.pdf.ln(10)  # Move to the next line
 
-                mean, std, maximum, minimum = self.access_nested_list_items(
-                    statistics)
+    #             mean, std, maximum, minimum = self.access_nested_list_items(
+    #                 statistics)
 
-                self.create_statistics_table(mean, std, maximum, minimum)
+    #             self.create_statistics_table(mean, std, maximum, minimum)
 
-    def create_statistics_table(self, mean, std, maximum, minimum):
-        self.pdf.ln(10)  # Move to the next line
-        col_width = 25
-        num_plots = len(mean)
+    # def create_statistics_table(self, mean, std, maximum, minimum):
+    #     self.pdf.ln(10)  # Move to the next line
+    #     col_width = 25
+    #     num_plots = len(mean)
 
-        self.pdf.set_fill_color(211, 211, 211)  # Set a light gray fill color
+    #     self.pdf.set_fill_color(211, 211, 211)  # Set a light gray fill color
 
-        # Add headers
-        self.pdf.cell(col_width, 10, "Metric", border=1, fill=True)
-        for i in range(num_plots):
-            self.pdf.cell(col_width, 10, f"Plot {i + 1}", border=1, fill=True)
-        self.pdf.ln()
+    #     # Add headers
+    #     self.pdf.cell(col_width, 10, "Metric", border=1, fill=True)
+    #     for i in range(num_plots):
+    #         self.pdf.cell(col_width, 10, f"Plot {i + 1}", border=1, fill=True)
+    #     self.pdf.ln()
 
-        metrics = ["Mean", "Std", "Maximum", "Minimum"]
-        data_lists = [mean, std, maximum, minimum]
+    #     metrics = ["Mean", "Std", "Maximum", "Minimum"]
+    #     data_lists = [mean, std, maximum, minimum]
 
-        for metric, data_list in zip(metrics, data_lists):
-            self.pdf.cell(col_width, 10, metric, border=1)
-            for value in data_list:
-                self.pdf.cell(col_width, 10, f"{value: .4f}", border=1)
-            self.pdf.ln(10)
+    #     for metric, data_list in zip(metrics, data_lists):
+    #         self.pdf.cell(col_width, 10, metric, border=1)
+    #         for value in data_list:
+    #             self.pdf.cell(col_width, 10, f"{value: .4f}", border=1)
+    #         self.pdf.ln(10)
 
-    def get_signal_statistics(self, graph_widget: str):
-        statistics = []
-        for signal in self.signals[graph_widget]:
-            _, data = signal[0]
-            mean = np.mean(data)
-            std = np.std(data)
-            maximum = np.max(data)
-            minimum = np.min(data)
-            statistics.append([mean, std, maximum, minimum])
-        return statistics
+    # def get_signal_statistics(self, graph_widget: str):
+    #     statistics = []
+    #     for signal in self.signals[graph_widget]:
+    #         _, data = signal[0]
+    #         mean = np.mean(data)
+    #         std = np.std(data)
+    #         maximum = np.max(data)
+    #         minimum = np.min(data)
+    #         statistics.append([mean, std, maximum, minimum])
+    #     return statistics
 
-    def access_nested_list_items(self, nested_list):
-        mean_list, std_list, max_list, min_list = [], [], [], []
+    # def access_nested_list_items(self, nested_list):
+    #     mean_list, std_list, max_list, min_list = [], [], [], []
 
-        for sublist in nested_list:
-            if len(sublist) == 4:
-                mean_list.append(sublist[0])
-                std_list.append(sublist[1])
-                max_list.append(sublist[2])
-                min_list.append(sublist[3])
+    #     for sublist in nested_list:
+    #         if len(sublist) == 4:
+    #             mean_list.append(sublist[0])
+    #             std_list.append(sublist[1])
+    #             max_list.append(sublist[2])
+    #             min_list.append(sublist[3])
 
-        return mean_list, std_list, max_list, min_list
+    #     return mean_list, std_list, max_list, min_list
 
-    def save_pdf(self):
-        self.pdf.output(str(self.folder_path))
-        # This message appears when the PDF is EXPORTED
-        QMessageBox.information(self, 'Done', 'PDF has been created')
-        for i in range(len(self.snapshoot_data)):
-            os.remove(f"Screenshot_{i}.png")
+    # def save_pdf(self):
+    #     self.pdf.output(str(self.folder_path))
+    #     # This message appears when the PDF is EXPORTED
+    #     QMessageBox.information(self, 'Done', 'PDF has been created')
+    #     for i in range(len(self.snapshoot_data)):
+    #         os.remove(f"Screenshot_{i}.png")
 
-    def generate_signal_report(self):
-        if isinstance(self.current_graph, list):
-            # If in link mode, generate reports for both graphs
-            for graph in self.current_graph:
-                self.create_report(graph)
-        else:
-            # Generate a report for the current graph
-            self.create_report(self.current_graph)
-        self.snapshoot_data = []
-        self.stat_lst = []
+    # def generate_signal_report(self):
+    #     if isinstance(self.current_graph, list):
+    #         # If in link mode, generate reports for both graphs
+    #         for graph in self.current_graph:
+    #             self.create_report(graph)
+    #     else:
+    #         # Generate a report for the current graph
+    #         self.create_report(self.current_graph)
+    #     self.snapshoot_data = []
+    #     self.stat_lst = []
 
 
 def main():
