@@ -8,7 +8,6 @@ import pyqtgraph as pg
 from matplotlib.figure import Figure
 from scipy.interpolate import interp1d
 
-from Classes.URL_Dialog import UrlDialog
 
 
 def create_polar_plot():
@@ -258,7 +257,7 @@ class ChannelViewer(QWidget):
         print("snapshots cleared")
 
     ##signal fetching
-   
+
 
 
 if __name__ == "__main__":
