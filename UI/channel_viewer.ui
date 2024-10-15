@@ -1586,21 +1586,13 @@ background-color:  rgb(0, 115, 173);
 
 QListWidget::item {
     background-color: #4a4a4a; /* Background color of each list item */
-    padding: 5px; /* Padding inside each list item */
-    border-bottom: 1px solid #c0c0c0; /* Separator between list items */
+    padding: 15px; /* Padding inside each list item */
+        margin: 10px; /* Margin to create space between items */
+    border: none;
     border-radius: 15px; /* Border radius for rounded corners */
 	color: #ffffff;
 }
 
-
-QListWidget::item:selected {
-    background-color: #3399ff; /* Background color of selected item */
-    color: #ffffff; /* Text color of selected item */
-}
-
-QListWidget::item:hover {
-    background-color: #e0e0e0; /* Background color when hovering over an item */
-}
 </string>
       </property>
       <property name="autoScrollMargin">

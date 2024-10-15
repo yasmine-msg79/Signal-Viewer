@@ -1,11 +1,13 @@
+import random
 import sys
-
+import pandas as pd
 import requests
 from PyQt5 import uic
 import numpy as np
-from PyQt5.QtGui import QPixmap, QPainter
+from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QListWidget, QPushButton, QFrame, QApplication, QDialog, QMessageBox)
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QListWidget, QPushButton, QFrame, QApplication, QDialog, QMessageBox,
+                             QFileDialog, QGroupBox, QHBoxLayout, QCheckBox, QLineEdit, QListWidgetItem, QSizePolicy)
 import pyqtgraph as pg
 from matplotlib.figure import Figure
 from scipy.interpolate import interp1d
@@ -48,7 +50,11 @@ def display_polar_signal(signal, polar_canvas, polar_ax):
 
 
 def display_rect_signal(signal, viewer):
-    viewer.plot(signal, pen='b')
+    red = random.randint(0, 255)
+    green = random.randint(0, 255)
+    blue = random.randint(0, 255)
+    pen_color = QColor(red, green, blue)
+    viewer.plot(signal, pen=pen_color)
     viewer.signal = signal
 
 
@@ -79,13 +85,18 @@ class ChannelViewer(QWidget):
         self.snapshot_button = self.findChild(QPushButton, "Snapshot")
         self.action_glue_button = self.findChild(QPushButton, "action_glue")
         self.real_time_button = self.findChild(QPushButton, "realtimebutton")
+        self.upload_button = self.findChild(QPushButton, "importButton")
+        self.input_url = self.findChild(QLineEdit, "lineEdit")
+        self.signal_block = self.findChild(QListWidget, "hideList1")
 
         self.graph_1.setLayout(QVBoxLayout())
         self.graph_2.setLayout(QVBoxLayout())
         self.glue_editor.setLayout(QVBoxLayout())
         self.polar_1.setLayout(QVBoxLayout())
         self.polar_2.setLayout(QVBoxLayout())
+        self.hidden_layout = QVBoxLayout()
 
+        self.signal_block.setLayout(self.hidden_layout)
         self.graph_1.layout().addWidget(self.graph1)
         self.graph_2.layout().addWidget(self.graph2)
         self.glue_editor.layout().addWidget(self.Glue_Editor)
@@ -102,15 +113,17 @@ class ChannelViewer(QWidget):
         self.start_line2 = None
         self.end_line2 = None
 
+        self.graph1.setObjectName("graph1")
+        self.graph2.setObjectName("graph2")
+
         # sample signals to test ui
         self.signal1 = generate_signal(200)
         self.signal2 = generate_signal(200)
-        self.signal3 = generate_signal(190)
 
-        display_rect_signal(self.signal1, self.graph1)
-        display_rect_signal(self.signal2, self.graph2)
-        display_polar_signal(self.signal1, self.polar1_canvas, self.polar1_ax)
-        display_polar_signal(self.signal2, self.polar2_canvas, self.polar2_ax)
+        # display_rect_signal(self.signal1, self.graph1)
+        # display_rect_signal(self.signal2, self.graph2)
+        # display_polar_signal(self.signal1, self.polar1_canvas, self.polar1_ax)
+        # display_polar_signal(self.signal2, self.polar2_canvas, self.polar2_ax)
         # self.display_signal(self.signal3, self.Glue_Editor)
 
         self.clear_button.hide()
@@ -121,9 +134,8 @@ class ChannelViewer(QWidget):
         self.glue_button.clicked.connect(self.toggle_glue_editor)
         self.snapshot_button.clicked.connect(self.take_snapshot)
         self.action_glue_button.clicked.connect(self.glue_action)
-        self.real_time_button.clicked.connect(self.fetch_real_time_signal)
-
-        self.ActiveSignals = [self.signal1, self.signal2, self.signal3]
+        self.real_time_button.clicked.connect(self.browse_url)
+        self.upload_button.clicked.connect(self.upload_file)
 
     def clear_glue_editor(self):
         self.Glue_Editor.clear()
@@ -143,10 +155,10 @@ class ChannelViewer(QWidget):
 
     def add_segment_selection_lines(self):
         if self.start_line1 is None and self.end_line1 is None and self.start_line2 is None and self.end_line2 is None:
-            self.start_line1 = pg.InfiniteLine(pos=10, angle=90, movable=True, pen=pg.mkPen(color='r', width=2))
-            self.end_line1 = pg.InfiniteLine(pos=50, angle=90, movable=True, pen=pg.mkPen(color='g', width=2))
-            self.start_line2 = pg.InfiniteLine(pos=10, angle=90, movable=True, pen=pg.mkPen(color='r', width=2))
-            self.end_line2 = pg.InfiniteLine(pos=50, angle=90, movable=True, pen=pg.mkPen(color='g', width=2))
+            self.start_line1 = pg.InfiniteLine(pos=10, angle=90, movable=True, pen=pg.mkPen(color='r', width=2, style=pg.QtCore.Qt.DashLine))
+            self.end_line1 = pg.InfiniteLine(pos=20, angle=90, movable=True, pen=pg.mkPen(color='g', width=2, style=pg.QtCore.Qt.DashLine))
+            self.start_line2 = pg.InfiniteLine(pos=10, angle=90, movable=True, pen=pg.mkPen(color='r', width=2, style= pg.QtCore.Qt.DashLine))
+            self.end_line2 = pg.InfiniteLine(pos=20, angle=90, movable=True, pen=pg.mkPen(color='g', width=2, style= pg.QtCore.Qt.DashLine))
 
             self.graph1.addItem(self.start_line1)
             self.graph1.addItem(self.end_line1)
@@ -254,139 +266,130 @@ class ChannelViewer(QWidget):
         self.snapshots.clear()
         print("snapshots cleared")
 
-    ##signal fetching
-    def fetch_real_time_signal(self):
-        """
-        Fetch real-time ECG data from the provided mock API and update the graph.
-        """
+    ## browsing
+    def create_signal_widget(self, index):
+
+        signal_widget = QGroupBox(f'Signal_{index + 1}')
+        signal_widget.setStyleSheet("background-color: white;")
+        signal_layout = QHBoxLayout()
+        viewer1_checkbox = QCheckBox()
+        viewer2_checkbox = QCheckBox()
+        signal_layout.addWidget(viewer1_checkbox)
+        signal_layout.addWidget(viewer2_checkbox)
+        viewer1_checkbox.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        viewer2_checkbox.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+
+        viewer1_checkbox.stateChanged.connect(lambda state: self.handle_viewer_checkbox(state, index, "Viewer1"))
+        viewer2_checkbox.stateChanged.connect(lambda state: self.handle_viewer_checkbox(state, index, "Viewer2"))
+
+        signal_widget.setMinimumWidth(200)
+        signal_widget.setMinimumHeight(100)
+        signal_widget.setLayout(signal_layout)
+        return signal_widget
+
+    def add_signal_to_list(self, index):
+        item = QListWidgetItem(f"Signal_{index + 1}")
+        item_widget = self.create_signal_widget(index)
+        self.signal_block.addItem(item)
+        self.signal_block.setItemWidget(item, item_widget)
+        self.hidden_layout.setSpacing(20)
+
+
+    def handle_viewer_checkbox(self, state, index, viewer):
+        if state == 2:  # Checked
+            self.plot_signal(index, viewer)
+
+    def plot_signal(self, index, viewer):
+        signal = self.active_signals[index]
+
+        if viewer.objectName() == "graph1":
+            display_rect_signal(signal, self.graph1)
+            display_polar_signal(signal, polar_canvas=self.polar1_canvas, polar_ax= self.polar1_ax)
+        else:
+            display_rect_signal(signal, self.graph2)
+            display_polar_signal(signal, polar_canvas=self.polar2_canvas, polar_ax= self.polar2_ax)
+
+    def extract_signal_data(self, source):
+        data = []
         try:
-            # URL for the Python Flask API
-            api_url = "http://127.0.0.1:5000/api/signal"
-            response = requests.get(api_url)
+            if "kaggle.com" in source:
+                response = requests.get(source)
+                response.raise_for_status()
+                data = pd.read_csv(pd.compat.StringIO(response.text)).values.tolist()
 
-            # Check if the request was successful
-            if response.status_code != 200:
-                raise Exception(f"Failed to fetch data: {response.status_code} {response.reason}")
+            else:
+                if source.endswith('.csv'):
+                    df = pd.read_csv(source)
+                    signal = {
+                        'x': df.iloc[:, 0].values,  # First column (e.g., Time)
+                        'y': df.iloc[:, 1].values  # Second column (e.g., Amplitude)
+                    }
+                    print(self.active_signals)
+                    return signal
+                elif source.endswith('.xls') or source.endswith('.xlsx'):
+                    df = pd.read_excel(source)
+                    signal = {
+                        'x': df.iloc[:, 0].values,
+                        'y': df.iloc[:, 1].values
+                    }
 
-            # Assume the response is a JSON object containing time (as UNIX timestamps) and signal values
-            data = response.json()
-            print("API Response:", data)  # Debugging line to inspect response
+                    print(self.active_signals)
+                    return signal
+                elif source.endswith('.txt'):
+                    with open(source, 'r') as file:
+                        lines = file.readlines()
+                        data = [list(map(float, line.split())) for line in lines]
+                else:
+                    return None
 
-            # Ensure the signal and time data are correctly converted to floats
-            self.time = np.array([float(t) if isinstance(t, (int, float)) else float(t.strip()) for t in data['time']],
-                                 dtype=float)
-            self.data = np.array(
-                [float(s) if isinstance(s, (int, float)) else float(s.strip()) for s in data['signal']], dtype=float)
-
-            # Check for shape compatibility
-            if self.time.shape[0] != self.data.shape[0]:
-                raise ValueError("Time and signal arrays must have the same length.")
-
-            # Process the fetched data
-            self.process_real_time_signal((self.time, self.data))
-
-        except requests.exceptions.RequestException as e:
-            QMessageBox.critical(self, "Error", f"Network error: {str(e)}")
-        except KeyError as e:
-            QMessageBox.critical(self, "Error", f"Missing data in response: {str(e)}")
-        except ValueError as e:
-            QMessageBox.critical(self, "Error", f"Value error: {str(e)}")
+            return [[row[0], row[1]] for row in data]  # Extract only time and amplitude
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Failed to fetch real-time signal: {str(e)}")
+            print(f"Error extracting signal data: {e}")
+            return None
+
+    def upload_file(self):
+        options = QFileDialog.Options()
+        file_name, _ = QFileDialog.getOpenFileName(self, "Select File", "",
+                                                   "CSV Files (*.csv);;Excel Files (*.xls *.xlsx);;Text Files (*.txt);;All Files (*)",
+                                                   options=options)
+        if file_name:
+            signal = self.extract_signal_data(file_name)
+            if signal is not None:
+                self.active_signals.append(signal)
+                self.add_signal_to_list(len(self.active_signals) - 1)
+
+    def browse_url(self):
+        url = self.input_url.text().strip()
+        if "kaggle.com" not in url:
+            print("Error: Only Kaggle URLs are supported.")
+            return
+
+        signal = self.extract_signal_data(url)
+        if signal is not None:
+            self.active_signals.append(signal)
+            self.add_signal_to_list(len(self.active_signals) - 1)
 
 
-def process_real_time_signal(self, real_time_data):
-    """
-    Process the fetched real-time signal and update the graph.
-    """
-    self.time, self.data = real_time_data
-
-    # Update the graph with the fetched data
-    if self.current_graph is None:
-        QMessageBox.warning(self, "Warning", "No graph selected.")
-        return
-
-    if self.current_graph == self.graph1:
-        self.signals["graph1"].append((self.time, self.data))
-        self.plot_graph_signal()  # Update graph1
-
-    elif self.current_graph == self.graph2:
-        self.signals["graph2"].append((self.time, self.data))
-        self.plot_graph_signal()  # Update graph2
-
-    else:  # Assuming a case for both graphs
-        self.signals["graph1"].append((self.time, self.data))
-        self.signals["graph2"].append((self.time, self.data))
-        self.plot_common_linked_signal()  # Update for both graphs
-
-
-# flask app to simulate real time emmiter
-
+# simulate real time emmiter
 from flask import Flask, jsonify
 
-import time
-import threading
-
 app = Flask(__name__)
-
-# Global variable to hold current signal data
-current_signal = {"time": [], "signal": []}
-
-# Global variable to control signal generation
+current_signal = {'x': [], 'y': []}
 running = True
-
-
-def generate_ecg_signal():
-    """
-    Simulate an ECG signal based on a combination of waveforms.
-    """
-    global current_signal
-    while running:
-        current_time = time.time()
-
-        # Simulate the ECG signal with PQRST complex
-        t = (current_time % 10)  # Cycle every 10 seconds to simulate repeated heartbeats
-
-        # ECG signal: P wave, QRS complex, and T wave
-        if t < 1:
-            signal_value = 0.5 * np.sin(2 * np.pi * t)  # P wave
-        elif t < 3:
-            signal_value = 1.5 * (1 - abs(t - 2))  # QRS complex (sharp spike)
-        elif t < 4:
-            signal_value = 0.4 * np.sin(2 * np.pi * (t - 3))  # T wave
-        else:
-            signal_value = 0  # Baseline after T wave
-
-        # Update the current_signal data with simulated ECG signal
-        current_signal["time"].append(current_time)
-        current_signal["signal"].append(signal_value)
-
-        # Limit the size of the data to avoid memory issues
-        if len(current_signal["time"]) > 1000:
-            current_signal["time"].pop(0)
-            current_signal["signal"].pop(0)
-
-        time.sleep(0.1)  # Emit new data every 0.1 seconds for more frequent updates
 
 
 @app.route('/')
 def index():
-    return "Welcome to the Dynamic ECG Signal API! Use /api/signal to get real-time signal data."
+    return "test"
 
 
 @app.route('/api/signal', methods=['GET'])
 def get_signal():
-    """
-    Endpoint to fetch the current real-time ECG signal.
-    """
     return jsonify(current_signal)
 
 
 @app.route('/stop', methods=['POST'])
 def stop_signal():
-    """
-    Stop the signal generation.
-    """
     global running
     running = False
     return jsonify({"status": "Signal generation stopped."})
