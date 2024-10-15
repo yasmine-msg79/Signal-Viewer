@@ -5,6 +5,7 @@ import requests
 from PyQt5 import uic
 import numpy as np
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
+from matplotlib.animation import FuncAnimation
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QListWidget, QPushButton, QFrame, QApplication, QDialog, QMessageBox,
                              QFileDialog, QGroupBox, QHBoxLayout, QCheckBox, QLineEdit, QListWidgetItem, QSizePolicy)
@@ -35,7 +36,21 @@ def plot_polar(signal, polar_ax, polar_canvas):
     theta = np.linspace(0, 2 * np.pi, len(signal['y']))
     r = (signal['y'] - np.min(signal['y'])) / (np.max(signal['y']) - np.min(signal['y']))
 
-    polar_ax.scatter(theta, r, color='g', s=20)
+    scatter = polar_ax.scatter(theta, r, color='g', s=20)
+    polar_ax.set_ylim(0, 10)
+
+    def update(frame):
+        # Update the radius for cine mode animation
+        # Here you can implement a smooth transition, like shifting the data
+        shift = frame % len(signal['y'])  # Wrap around the signal length
+        r = np.roll((signal['y'] - np.min(signal['y'])) / (np.max(signal['y']) - np.min(signal['y'])), shift)
+
+        scatter.set_offsets(np.column_stack((theta, r)))
+        return scatter,
+
+    # Create animation
+    ani = FuncAnimation(polar_canvas.figure, update, frames=len(signal['y']), blit=True, interval=100)
+
     polar_canvas.draw()
 
 
@@ -272,15 +287,15 @@ class ChannelViewer(QWidget):
         signal_widget = QGroupBox(f'Signal_{index + 1}')
         signal_widget.setStyleSheet("background-color: white;")
         signal_layout = QHBoxLayout()
-        viewer1_checkbox = QCheckBox()
-        viewer2_checkbox = QCheckBox()
+        viewer1_checkbox = QCheckBox("Viewer1")
+        viewer2_checkbox = QCheckBox("Viewer2")
         signal_layout.addWidget(viewer1_checkbox)
         signal_layout.addWidget(viewer2_checkbox)
         viewer1_checkbox.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         viewer2_checkbox.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
 
-        viewer1_checkbox.stateChanged.connect(lambda state: self.handle_viewer_checkbox(state, index, "Viewer1"))
-        viewer2_checkbox.stateChanged.connect(lambda state: self.handle_viewer_checkbox(state, index, "Viewer2"))
+        viewer1_checkbox.stateChanged.connect(lambda state: self.handle_viewer_checkbox(state, index, self.graph1))
+        viewer2_checkbox.stateChanged.connect(lambda state: self.handle_viewer_checkbox(state, index, self.graph2))
 
         signal_widget.setMinimumWidth(200)
         signal_widget.setMinimumHeight(100)
