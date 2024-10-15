@@ -1,31 +1,55 @@
+import sys
 from PyQt5 import uic
 import numpy as np
-import matplotlib.pyplot as plt
 from PyQt5.QtGui import QPixmap, QPainter
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QPushButton, QHBoxLayout, QFrame)
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QListWidget, QPushButton, QFrame, QApplication, QDialog)
 import pyqtgraph as pg
+from matplotlib.figure import Figure
+from scipy.interpolate import interp1d
+
+from Classes.URL_Dialog import UrlDialog
 
 
 def create_polar_plot():
-    figure = plt.figure()
-    ax = figure.add_subplot(111, polar=True)
+    figure = Figure()
+    ax = figure.add_subplot(111, polar=True)  # Polar axis
     canvas = FigureCanvas(figure)
-    return canvas
+    return canvas, ax
 
 
 def plot_rect(signal, rect_plot):
+    rect_plot.clear()
     rect_plot.plot(signal['x'], signal['y'], pen='b')
+    rect_plot.setTitle("Cartesian Cine")
+    rect_plot.setLabel('left', 'Amplitude')
+    rect_plot.setLabel('bottom', 'Time')
+    rect_plot.showGrid(x=True, y=True)
 
 
-def plot_polar(signal, polar_plot):
-    theta = np.linspace(0, 2 * np.pi, len(signal['x']))
-    radius = signal['y']
+def plot_polar(signal, polar_ax, polar_canvas):
+    polar_ax.clear()
 
-    ax = polar_plot.figure.gca(polar=True)
-    # ax.clear()
-    ax.plot(theta, radius)
-    polar_plot.draw()
+    theta = np.linspace(0, 2 * np.pi, len(signal['y']))
+    r = (signal['y'] - np.min(signal['y'])) / (np.max(signal['y']) - np.min(signal['y']))
+
+    polar_ax.scatter(theta, r, color='g', s=20)
+    polar_canvas.draw()
+
+
+def generate_signal(length):
+    x = np.linspace(0, 1000, length)
+    y = np.sin(x) + 0.5 * np.random.randn(length)
+    return {'x': x, 'y': y}
+
+
+def display_polar_signal(signal, polar_canvas, polar_ax):
+    plot_polar(signal, polar_ax, polar_canvas)
+
+
+def display_rect_signal(signal, viewer):
+    viewer.plot(signal, pen='b')
+    viewer.signal = signal
 
 
 class ChannelViewer(QWidget):
@@ -42,8 +66,8 @@ class ChannelViewer(QWidget):
         self.Glue_Editor = pg.PlotWidget(self)
         self.Glue_Editor.setBackground('w')
 
-        self.Polar1 = create_polar_plot()
-        self.Polar2 = create_polar_plot()
+        self.polar1_canvas, self.polar1_ax = create_polar_plot()
+        self.polar2_canvas, self.polar2_ax = create_polar_plot()
 
         self.graph_1 = self.findChild(QFrame, "graph1")
         self.graph_2 = self.findChild(QFrame, "graph2")
@@ -54,6 +78,10 @@ class ChannelViewer(QWidget):
         self.glue_button = self.findChild(QPushButton, "toggle_glue")
         self.snapshot_button = self.findChild(QPushButton, "Snapshot")
         self.action_glue_button = self.findChild(QPushButton, "action_glue")
+        self.browse_local_button = self.findChild(QPushButton, "browse_local_button")
+        self.browse_remote_button = self.findChild(QPushButton, "browse_remote_button")
+        self.signal_block = self.findChild(QWidget, "signal_block")
+        self.signal_list = self.findChild(QListWidget, "listWidget")
 
         self.graph_1.setLayout(QVBoxLayout())
         self.graph_2.setLayout(QVBoxLayout())
@@ -64,10 +92,11 @@ class ChannelViewer(QWidget):
         self.graph_1.layout().addWidget(self.graph1)
         self.graph_2.layout().addWidget(self.graph2)
         self.glue_editor.layout().addWidget(self.Glue_Editor)
-        self.polar_1.layout().addWidget(self.Polar1)
-        self.polar_2.layout().addWidget(self.Polar2)
+        self.polar_1.layout().addWidget(self.polar1_canvas)
+        self.polar_2.layout().addWidget(self.polar2_canvas)
 
         self.signals = {}
+        self.Gap_value = 0
         self.active_signals = []
         self.snapshots = []
         self.selected_segments = []
@@ -77,13 +106,15 @@ class ChannelViewer(QWidget):
         self.end_line2 = None
 
         # sample signals to test ui
-        self.signal1 = self.generate_signal(160)
-        self.signal2 = self.generate_signal(340)
-        self.signal3 = self.generate_signal(190)
+        self.signal1 = generate_signal(200)
+        self.signal2 = generate_signal(200)
+        self.signal3 = generate_signal(190)
 
-        self.display_signal(self.signal1, self.graph1)
-        self.display_signal(self.signal2, self.graph2)
-        self.display_signal(self.signal3, self.Glue_Editor)
+        display_rect_signal(self.signal1, self.graph1)
+        display_rect_signal(self.signal2, self.graph2)
+        display_polar_signal(self.signal1, self.polar1_canvas, self.polar1_ax)
+        display_polar_signal(self.signal2, self.polar2_canvas, self.polar2_ax)
+        # self.display_signal(self.signal3, self.Glue_Editor)
 
         self.clear_button.hide()
         self.snapshot_button.hide()
@@ -93,27 +124,9 @@ class ChannelViewer(QWidget):
         self.glue_button.clicked.connect(self.toggle_glue_editor)
         self.snapshot_button.clicked.connect(self.take_snapshot)
         self.action_glue_button.clicked.connect(self.glue_action)
-
+        self.browse_remote_button.clicked.connect(self.open_url_dialog())
 
         self.ActiveSignals = [self.signal1, self.signal2, self.signal3]
-
-    def generate_signal(self, length):
-        """Generates a random signal with x and y data."""
-        x = np.linspace(0, 1000, length)  # Simulates a time axis
-        y = np.random.randn(length)  # Random values as signal data
-        return {'x': x, 'y': y}
-
-    def display_signal(self, signal, viewer):
-        viewer.plot(signal, pen='b')
-
-        if viewer == 'graph_1':
-            self.graph_1.plot(signal, pen='b')
-        elif viewer == 'graph_2':
-            self.graph_2.plot(signal, pen='r')
-        elif viewer == 'polar_1':
-            plot_polar(signal, self.polar_1)
-        elif viewer == 'polar_2':
-            plot_polar(signal, self.polar_2)
 
     def clear_glue_editor(self):
         self.Glue_Editor.clear()
@@ -144,7 +157,9 @@ class ChannelViewer(QWidget):
             self.graph2.addItem(self.end_line2)
 
     def glue_action(self):
-        self.select_segments(self.signal1, self.signal2)
+        signal1 = self.graph1.signal
+        signal2 = self.graph2.signal
+        self.select_segments(signal1, signal2)
         self.glue_segments()
 
     def toggle_glue_editor(self):
@@ -177,31 +192,38 @@ class ChannelViewer(QWidget):
         self.selected_segments.append(segment1)
         self.selected_segments.append(segment2)
 
-    def glue_segments(self, gap=None):
-        seg1, seg2 = self.selected_segments[:2]
+    def glue_segments(self):
+        seg1, seg2 = self.selected_segments
 
-        original_gap = seg2['x'][0] - seg1['x'][-1]
+        def_gap = seg2['x'][0] - seg1['x'][-1]
 
-        if gap:
-            actual_gap = gap
+        if self.Gap_value != 0:
+            actual_gap = self.Gap_value
         else:
-            actual_gap = original_gap
+            actual_gap = def_gap
 
-        print(f"original: {original_gap}, actual: {actual_gap}")
+        # print(f"default gap: {def_gap}, slider adjusted gap: {actual_gap}")
+
         if actual_gap > 0:
-            interpolated_x = np.linspace(seg1['x'][-1], seg2['x'][0], 50)
-            interpolated_y = np.interp(interpolated_x, seg1['x'][-1], seg2['x'][0], seg1['y'][-1], seg2['y'][0])
-            glued_x = np.concatenate((seg1['x'], interpolated_x, seg2['x']))
-            glued_y = np.concatenate((seg1['y'], interpolated_y, seg2['y']))
+            interp_x = np.linspace(seg1['x'][-1], seg2['x'][0], 50)
+            f = interp1d([seg1['x'][-1], seg2['x'][0]], [seg1['y'][-1], seg2['y'][0]], kind='linear')
+            interp_y = f(interp_x)
+
+            glued_x = np.concatenate((seg1['x'], interp_x, seg2['x']))
+            glued_y = np.concatenate((seg1['y'], interp_y, seg2['y']))
+
+        elif actual_gap < 0:
+            overlap_start = np.searchsorted(seg2['x'], seg1['x'][-1])
+            glued_x = np.concatenate((seg1['x'], seg2['x'][overlap_start:]))
+            glued_y = np.concatenate((seg1['y'], seg2['y'][overlap_start:]))
+
         else:
             glued_x = np.concatenate((seg1['x'], seg2['x']))
             glued_y = np.concatenate((seg1['y'], seg2['y']))
 
         self.Glue_Editor.clear()
         self.Glue_Editor.plot(glued_x, glued_y, pen='g')
-
-        self.selected_segments.clear()
-        print("glued and plotted")
+        # print("glued and plotted.")
 
     @staticmethod
     def calc_statistics(signal):
@@ -227,9 +249,21 @@ class ChannelViewer(QWidget):
         print(f"Snapshot saved: {snapshot_name}")
         print(f"snapshots:{self.snapshots}")
 
-    def get_snapshots(self):
-        return self.snapshots
+    @staticmethod
+    def get_snapshots():
+        return ChannelViewer().snapshots
 
     def clear_snapshots(self):
         self.snapshots.clear()
         print("snapshots cleared")
+
+    ##signal fetching
+   
+
+
+if __name__ == "__main__":
+    app = QApplication([])
+    window = ChannelViewer()
+    window.setWindowTitle("Viewers and Signals")
+    window.show()
+    sys.exit(app.exec_())
