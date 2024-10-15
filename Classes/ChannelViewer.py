@@ -1,13 +1,14 @@
 import sys
+
+import requests
 from PyQt5 import uic
 import numpy as np
 from PyQt5.QtGui import QPixmap, QPainter
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QListWidget, QPushButton, QFrame, QApplication, QDialog)
+from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QListWidget, QPushButton, QFrame, QApplication, QDialog, QMessageBox)
 import pyqtgraph as pg
 from matplotlib.figure import Figure
 from scipy.interpolate import interp1d
-
 
 
 def create_polar_plot():
@@ -77,10 +78,7 @@ class ChannelViewer(QWidget):
         self.glue_button = self.findChild(QPushButton, "toggle_glue")
         self.snapshot_button = self.findChild(QPushButton, "Snapshot")
         self.action_glue_button = self.findChild(QPushButton, "action_glue")
-        self.browse_local_button = self.findChild(QPushButton, "browse_local_button")
-        self.browse_remote_button = self.findChild(QPushButton, "browse_remote_button")
-        self.signal_block = self.findChild(QWidget, "signal_block")
-        self.signal_list = self.findChild(QListWidget, "listWidget")
+        self.real_time_button = self.findChild(QPushButton, "realtimebutton")
 
         self.graph_1.setLayout(QVBoxLayout())
         self.graph_2.setLayout(QVBoxLayout())
@@ -123,7 +121,7 @@ class ChannelViewer(QWidget):
         self.glue_button.clicked.connect(self.toggle_glue_editor)
         self.snapshot_button.clicked.connect(self.take_snapshot)
         self.action_glue_button.clicked.connect(self.glue_action)
-
+        self.real_time_button.clicked.connect(self.fetch_real_time_signal)
 
         self.ActiveSignals = [self.signal1, self.signal2, self.signal3]
 
@@ -257,7 +255,141 @@ class ChannelViewer(QWidget):
         print("snapshots cleared")
 
     ##signal fetching
+    def fetch_real_time_signal(self):
+        """
+        Fetch real-time ECG data from the provided mock API and update the graph.
+        """
+        try:
+            # URL for the Python Flask API
+            api_url = "http://127.0.0.1:5000/api/signal"
+            response = requests.get(api_url)
 
+            # Check if the request was successful
+            if response.status_code != 200:
+                raise Exception(f"Failed to fetch data: {response.status_code} {response.reason}")
+
+            # Assume the response is a JSON object containing time (as UNIX timestamps) and signal values
+            data = response.json()
+            print("API Response:", data)  # Debugging line to inspect response
+
+            # Ensure the signal and time data are correctly converted to floats
+            self.time = np.array([float(t) if isinstance(t, (int, float)) else float(t.strip()) for t in data['time']],
+                                 dtype=float)
+            self.data = np.array(
+                [float(s) if isinstance(s, (int, float)) else float(s.strip()) for s in data['signal']], dtype=float)
+
+            # Check for shape compatibility
+            if self.time.shape[0] != self.data.shape[0]:
+                raise ValueError("Time and signal arrays must have the same length.")
+
+            # Process the fetched data
+            self.process_real_time_signal((self.time, self.data))
+
+        except requests.exceptions.RequestException as e:
+            QMessageBox.critical(self, "Error", f"Network error: {str(e)}")
+        except KeyError as e:
+            QMessageBox.critical(self, "Error", f"Missing data in response: {str(e)}")
+        except ValueError as e:
+            QMessageBox.critical(self, "Error", f"Value error: {str(e)}")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to fetch real-time signal: {str(e)}")
+
+
+def process_real_time_signal(self, real_time_data):
+    """
+    Process the fetched real-time signal and update the graph.
+    """
+    self.time, self.data = real_time_data
+
+    # Update the graph with the fetched data
+    if self.current_graph is None:
+        QMessageBox.warning(self, "Warning", "No graph selected.")
+        return
+
+    if self.current_graph == self.graph1:
+        self.signals["graph1"].append((self.time, self.data))
+        self.plot_graph_signal()  # Update graph1
+
+    elif self.current_graph == self.graph2:
+        self.signals["graph2"].append((self.time, self.data))
+        self.plot_graph_signal()  # Update graph2
+
+    else:  # Assuming a case for both graphs
+        self.signals["graph1"].append((self.time, self.data))
+        self.signals["graph2"].append((self.time, self.data))
+        self.plot_common_linked_signal()  # Update for both graphs
+
+
+# flask app to simulate real time emmiter
+
+from flask import Flask, jsonify
+
+import time
+import threading
+
+app = Flask(__name__)
+
+# Global variable to hold current signal data
+current_signal = {"time": [], "signal": []}
+
+# Global variable to control signal generation
+running = True
+
+
+def generate_ecg_signal():
+    """
+    Simulate an ECG signal based on a combination of waveforms.
+    """
+    global current_signal
+    while running:
+        current_time = time.time()
+
+        # Simulate the ECG signal with PQRST complex
+        t = (current_time % 10)  # Cycle every 10 seconds to simulate repeated heartbeats
+
+        # ECG signal: P wave, QRS complex, and T wave
+        if t < 1:
+            signal_value = 0.5 * np.sin(2 * np.pi * t)  # P wave
+        elif t < 3:
+            signal_value = 1.5 * (1 - abs(t - 2))  # QRS complex (sharp spike)
+        elif t < 4:
+            signal_value = 0.4 * np.sin(2 * np.pi * (t - 3))  # T wave
+        else:
+            signal_value = 0  # Baseline after T wave
+
+        # Update the current_signal data with simulated ECG signal
+        current_signal["time"].append(current_time)
+        current_signal["signal"].append(signal_value)
+
+        # Limit the size of the data to avoid memory issues
+        if len(current_signal["time"]) > 1000:
+            current_signal["time"].pop(0)
+            current_signal["signal"].pop(0)
+
+        time.sleep(0.1)  # Emit new data every 0.1 seconds for more frequent updates
+
+
+@app.route('/')
+def index():
+    return "Welcome to the Dynamic ECG Signal API! Use /api/signal to get real-time signal data."
+
+
+@app.route('/api/signal', methods=['GET'])
+def get_signal():
+    """
+    Endpoint to fetch the current real-time ECG signal.
+    """
+    return jsonify(current_signal)
+
+
+@app.route('/stop', methods=['POST'])
+def stop_signal():
+    """
+    Stop the signal generation.
+    """
+    global running
+    running = False
+    return jsonify({"status": "Signal generation stopped."})
 
 
 if __name__ == "__main__":
