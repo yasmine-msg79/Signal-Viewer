@@ -123,7 +123,7 @@ class ChannelViewer(QWidget):
         self.glue_button.clicked.connect(self.toggle_glue_editor)
         self.snapshot_button.clicked.connect(self.take_snapshot)
         self.action_glue_button.clicked.connect(self.glue_action)
-        self.browse_remote_button.clicked.connect(self.open_url_dialog())
+
 
         self.ActiveSignals = [self.signal1, self.signal2, self.signal3]
 
