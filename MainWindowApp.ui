@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1484</width>
+    <width>1384</width>
     <height>821</height>
    </rect>
   </property>
@@ -174,75 +174,6 @@ background-color:  rgb(0, 115, 173);
        </item>
        <item>
         <widget class="Line" name="line_8">
-         <property name="font">
-          <font>
-           <pointsize>100</pointsize>
-           <weight>50</weight>
-           <bold>false</bold>
-          </font>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">/* Line style */
-
-  /* Set the width of the line */
-  width: 20px;
-
-  /* Set the height of the line */
-  height: 5px;
-
-  /* Set the background color of the line */
-  background-color: #3a3b3c;
-
-  /* Set the border of the line */
-  border: 10px;
-
-  /* Set the border radius of the line */
-  border-radius:5px;
-
-
-
-</string>
-         </property>
-         <property name="lineWidth">
-          <number>50</number>
-         </property>
-         <property name="midLineWidth">
-          <number>100</number>
-         </property>
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="signal_Link_Label">
-         <property name="font">
-          <font>
-           <pointsize>10</pointsize>
-          </font>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">  position: relative;
-  display: inline-block;
-  height: 32px;
-  width: 210px;
-  margin: 0;
-  padding: 0;
-  background-color: #fff;
-  border: none;
-  border-radius: 10px;
-  color:#0d0d0d;</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
-         </property>
-         <property name="placeholderText">
-          <string>Signal Link</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="Line" name="line_7">
          <property name="font">
           <font>
            <pointsize>100</pointsize>
@@ -481,6 +412,30 @@ color: #fff;</string>
               <attribute name="title">
                <string>Non Rectangular Viewer</string>
               </attribute>
+              <widget class="QFrame" name="polar1">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>891</width>
+                 <height>271</height>
+                </rect>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="autoFillBackground">
+                <bool>false</bool>
+               </property>
+               <property name="frameShape">
+                <enum>QFrame::StyledPanel</enum>
+               </property>
+               <property name="frameShadow">
+                <enum>QFrame::Raised</enum>
+               </property>
+              </widget>
              </widget>
             </widget>
            </item>
@@ -934,6 +889,25 @@ color: #fff;</string>
               <attribute name="title">
                <string>Non Rectangular Viewer</string>
               </attribute>
+              <widget class="QFrame" name="polar2">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>871</width>
+                 <height>231</height>
+                </rect>
+               </property>
+               <property name="autoFillBackground">
+                <bool>false</bool>
+               </property>
+               <property name="frameShape">
+                <enum>QFrame::StyledPanel</enum>
+               </property>
+               <property name="frameShadow">
+                <enum>QFrame::Raised</enum>
+               </property>
+              </widget>
              </widget>
             </widget>
            </item>
@@ -1991,7 +1965,7 @@ background-color:  rgb(0, 115, 173);
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1484</width>
+     <width>1384</width>
      <height>26</height>
     </rect>
    </property>
