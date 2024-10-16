@@ -1318,35 +1318,22 @@ class MainWindow(QtWidgets.QMainWindow):
     # Snapshot 
 
 
-    from PyQt6.QtWidgets import QFileDialog
-    import pyqtgraph.exporters
-
+        # Snapshot 
     def take_snapshot(self):
-        # Retrieve the current state of the graphs
-        graph1_state = self.graph1.plotItem
-        graph2_state = self.graph2.plotItem
+        """
+        Captures the current state of the graph and saves it as an image file.
+        """
+        # Prompt user to choose save location
+        file_path, _ = QFileDialog.getSaveFileName(self, "Save Snapshot", "", "PNG Image (*.png);;All Files (*)")
+        
+        if file_path:
+            # Export the current graph to an image file
+            exporter = pg.exporters.ImageExporter(self.current_graph.plotItem)
+            exporter.export(file_path)
+            
+            # Show confirmation message
+            QMessageBox.information(self, "Snapshot Saved", f"Snapshot saved at {file_path}")
 
-        # Use the pyqtgraph library to export the graphs as images
-        exporter1 = pyqtgraph.exporters.ImageExporter(graph1_state)
-        exporter2 = pyqtgraph.exporters.ImageExporter(graph2_state)
-
-        # Open a file dialog to specify the save location
-        file_dialog = QFileDialog()
-        file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
-        file_dialog.setNameFilter("Images (*.png *.jpg *.bmp)")
-        file_dialog.setDefaultSuffix("png")
-
-        if file_dialog.exec():
-            file_paths = file_dialog.selectedFiles()
-            if len(file_paths) == 2:
-                # Save the images to the specified location
-                exporter1.export(file_paths[0])
-                exporter2.export(file_paths[1])
-                print("SnapShot Done")
-            else:
-                print("Please select two file paths to save the snapshots.")
-        else:
-            print("Snapshot canceled.")
 
 
     # Report Generation
