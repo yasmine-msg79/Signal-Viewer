@@ -83,6 +83,8 @@ from fpdf import FPDF
 from pyqtgraph.exporters import ImageExporter
 import os
 import qdarkstyle
+import pyqtgraph.exporters
+from pyqtgraph import PlotWidget
 import random
 from PyQt6.QtCore import Qt
 # Added new libraries
@@ -133,9 +135,28 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def init_ui(self):
         # Load the UI Page
-        self.ui = uic.loadUi('MainWindowApp.ui', self)
+        self.ui = uic.loadUi('MainWindowAppLastEND.ui', self)
         self.setWindowTitle("Multi-Channel Signal Viewer Team 1")
-        # self.setWindowIcon(QIcon("Icons/ECG.png"))
+            # self.setWindowIcon(QIcon("Icons/ECG.png"))
+
+
+
+        # Access the PlotWidgets created in Qt Designer
+        self.graph1 = self.findChild(PlotWidget, 'graph1')
+        self.graph2 = self.findChild(PlotWidget, 'graph2')
+
+        # # Connect tab change event to handler
+        # # Declare the tab widget
+        # self.tab = self.findChild(QtWidgets.QTabWidget, 'tab')
+        # self.tab3 = self.findChild(QtWidgets.QTabWidget, 'tab_3')
+
+        # # # Connect tab change event to handler
+        # self.tab.currentIndex().connect(lambda index: self.on_tab_change(index))
+        # self.tab3.currentIndex().connect(lambda index: self.on_tab_change(index))
+
+
+
+
         self.lookup = {"graph1": self.graph1, "graph2": self.graph2}
         self.current_graph = self.graph1  # default value
         self.current_graph.clear()
@@ -182,7 +203,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Set speed slider properties
         self.speedSlider.setMinimum(0)
         self.speedSlider.setMaximum(100)
-        self.speedSlider.setSingleStep(5)
+        self.speedSlider.setSingleStep(3)
         self.speedSlider.setValue(self.data_index[self.get_graph_name()])
         self.speedSlider.valueChanged.connect(self.change_speed)
 
@@ -228,36 +249,36 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.add_legend("graph2"))
 
         # Create shortcuts for actions
-        self.create_shortcuts()
+    #     self.create_shortcuts()
 
-    def create_shortcuts(self):
-        # Create a shortcut for the Import button
-        import_shortcut = QShortcut(QKeySequence('Ctrl+O'), self)
-        import_shortcut.activated.connect(self.browse)
+    # def create_shortcuts(self):
+    #     # Create a shortcut for the Import button
+    #     import_shortcut = QShortcut(QKeySequence('Ctrl+O'), self)
+    #     import_shortcut.activated.connect(self.browse)
 
-        # Create a shortcut for the snapshoot button
-        report_shortcut = QShortcut(QKeySequence('Ctrl+S'), self)
-        report_shortcut.activated.connect(self.take_snapshot)
+    #     # Create a shortcut for the snapshoot button
+    #     report_shortcut = QShortcut(QKeySequence('Ctrl+S'), self)
+    #     report_shortcut.activated.connect(self.take_snapshot)
 
-        # Create a shortcut for the REPORT button
-        report_shortcut = QShortcut(QKeySequence('Ctrl+P'), self)
-        report_shortcut.activated.connect(self.generate_signal_report)
+    #     # Create a shortcut for the REPORT button
+    #     report_shortcut = QShortcut(QKeySequence('Ctrl+P'), self)
+    #     report_shortcut.activated.connect(self.generate_signal_report)
 
-        # Create a shortcut for the play button
-        paly_shortcut = QShortcut(Qt.Key.Key_Space, self)
-        paly_shortcut.activated.connect(self.toggle_play_pause)
+    #     # Create a shortcut for the play button
+    #     paly_shortcut = QShortcut(Qt.Key.Key_Space, self)
+    #     paly_shortcut.activated.connect(self.toggle_play_pause)
 
-        # Create a shortcut for the rewind button
-        rewind_shortcut = QShortcut(QKeySequence('Ctrl+R'), self)
-        rewind_shortcut.activated.connect(self.rewind_graph)
+    #     # Create a shortcut for the rewind button
+    #     rewind_shortcut = QShortcut(QKeySequence('Ctrl+R'), self)
+    #     rewind_shortcut.activated.connect(self.rewind_graph)
 
-        # Create a shortcut for the link button
-        link_shortcut = QShortcut(QKeySequence('Ctrl+L'), self)
-        link_shortcut.activated.connect(self.link_graphs)
+    #     # Create a shortcut for the link button
+    #     link_shortcut = QShortcut(QKeySequence('Ctrl+L'), self)
+    #     link_shortcut.activated.connect(self.link_graphs)
 
-        # Create a shortcut for the clear button
-        clear_shortcut = QShortcut(QKeySequence('Ctrl+C'), self)
-        clear_shortcut.activated.connect(self.hide_Show_graph)
+    #     # Create a shortcut for the clear button
+    #     clear_shortcut = QShortcut(QKeySequence('Ctrl+C'), self)
+    #     clear_shortcut.activated.connect(self.hide_Show_graph)
 
 
                 
@@ -1258,27 +1279,213 @@ class MainWindow(QtWidgets.QMainWindow):
                     signals_lines[selected_channel_index - 1].setPen(new_color)
 
     #  Glue Signals
-    def glue_graphs(self):  
-       pass
+    def glue_graphs(self):
+        # Retrieve signals from the two graphs
+        signal1 = self.graph1.signal
+        signal2 = self.graph2.signal
 
+        # Select segments from each signal based on user-defined start and end points
+        start_index1 = np.searchsorted(signal1['x'], self.start_line1.value())
+        end_index1 = np.searchsorted(signal1['x'], self.end_line1.value())
+        start_index2 = np.searchsorted(signal2['x'], self.start_line2.value())
+        end_index2 = np.searchsorted(signal2['x'], self.end_line2.value())
+
+        segment1 = {'x': signal1['x'][start_index1:end_index1], 'y': signal1['y'][start_index1:end_index1]}
+        segment2 = {'x': signal2['x'][start_index2:end_index2], 'y': signal2['y'][start_index2:end_index2]}
+
+        # Glue the selected segments together
+        def_gap = segment2['x'][0] - segment1['x'][-1]
+        actual_gap = self.Gap_value if self.Gap_value != 0 else def_gap
+
+        if actual_gap > 0:
+            glued_x = np.concatenate((segment1['x'], segment1['x'][-1] + np.arange(1, actual_gap + 1), segment2['x']))
+            glued_y = np.concatenate((segment1['y'], np.zeros(actual_gap), segment2['y']))
+        elif actual_gap < 0:
+            glued_x = np.concatenate((segment1['x'], segment2['x'] - actual_gap))
+            glued_y = np.concatenate((segment1['y'], segment2['y']))
+        else:
+            glued_x = np.concatenate((segment1['x'], segment2['x']))
+            glued_y = np.concatenate((segment1['y'], segment2['y']))
+
+        # Plot the glued signal in a designated plot area
+        self.Glue_Editor.clear()
+        self.Glue_Editor.plot(glued_x, glued_y, pen='g')
 
 
 
 # ************************************** Snapshot and PDF Report **************************************
        
     # Snapshot 
-    def generate_signal_report(self):
-        pass
+
+
+    from PyQt6.QtWidgets import QFileDialog
+    import pyqtgraph.exporters
 
     def take_snapshot(self):
-        print("SnapShot Done")
+        # Retrieve the current state of the graphs
+        graph1_state = self.graph1.plotItem
+        graph2_state = self.graph2.plotItem
+
+        # Use the pyqtgraph library to export the graphs as images
+        exporter1 = pyqtgraph.exporters.ImageExporter(graph1_state)
+        exporter2 = pyqtgraph.exporters.ImageExporter(graph2_state)
+
+        # Open a file dialog to specify the save location
+        file_dialog = QFileDialog()
+        file_dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptSave)
+        file_dialog.setNameFilter("Images (*.png *.jpg *.bmp)")
+        file_dialog.setDefaultSuffix("png")
+
+        if file_dialog.exec():
+            file_paths = file_dialog.selectedFiles()
+            if len(file_paths) == 2:
+                # Save the images to the specified location
+                exporter1.export(file_paths[0])
+                exporter2.export(file_paths[1])
+                print("SnapShot Done")
+            else:
+                print("Please select two file paths to save the snapshots.")
+        else:
+            print("Snapshot canceled.")
 
 
     # Report Generation
     def generate_report(self):
+        self.folder_path, _ = QFileDialog.getSaveFileName(
+            None, 'Save the signal file', None, 'PDF Files (*.pdf)')
+        if self.folder_path:
+            self.pdf = FPDF()
+            self.pdf.add_page()
+            self.add_page_border()
+            self.add_title("Signal Report")
+            self.add_logos()
+            self.add_snapshots_to_pdf(self.pdf)
+            self.add_statistics_tables()
+            self.save_pdf()
+
+    def generate_signal_report(self):
+        if isinstance(self.current_graph, list):
+            # If in link mode, generate reports for both graphs
+            for graph in self.current_graph:
+                self.create_report(graph)
+        else:
+            # Generate a report for the current graph
+            self.create_report(self.current_graph)
+        self.snapshoot_data = []
+        self.stat_lst = []
+
+    def add_page_border(self):
+        self.pdf.set_draw_color(0, 0, 0)  # Set line color to black
+        # Draw a border around the entire page
+        self.pdf.rect(1, 1, self.pdf.w - 2, self.pdf.h - 2)
+
+    def add_title(self, title):
+        self.pdf.set_font("times", "B", size=25)
+        self.pdf.cell(200, 10, txt=title, ln=True, align="C")
+        # Reset the font to the previous settings
+        self.pdf.set_font("times", size=12)
+
+    def add_logos(self):
         pass
+        # self.pdf.image('LOGO/asset-cairo.png', 2, 3, 40, 40)
+        # self.pdf.image('LOGO/Asset-SBE.png', 160, 3, 40, 40)
+        # self.pdf.ln(30)
 
+    def add_snapshots_to_pdf(self, pdf):
+        # Capture the snapshots
+        snap_data = self.snapshoot_data
 
+        # Iterate over each snapshot
+        for graph_image in snap_data:
+            # Add the graph name to the PDF
+            # Extract the image file name
+            image_name = os.path.basename(graph_image[:12])
+
+            pdf.cell(200, 10, text=image_name)
+            pdf.ln(10)
+
+            pdf.image(graph_image, x=10, w=190)
+            pdf.ln(10)
+
+    def add_statistics_tables(self):
+        graph_names = ["graph1", "graph2"]
+
+        for graph_name in graph_names:
+            statistics = self.get_signal_statistics(graph_name)
+
+            if statistics:
+                self.pdf.cell(200, 10, text=f"Statistics for {graph_name}")
+                self.pdf.ln(10)  # Move to the next line
+
+                mean, std, maximum, minimum = self.access_nested_list_items(
+                    statistics)
+
+                self.create_statistics_table(mean, std, maximum, minimum)
+
+    def create_statistics_table(self, mean, std, maximum, minimum):
+        self.pdf.ln(10)  # Move to the next line
+        col_width = 25
+        num_plots = len(mean)
+
+        self.pdf.set_fill_color(211, 211, 211)  # Set a light gray fill color
+
+        # Add headers
+        self.pdf.cell(col_width, 10, "Metric", border=1, fill=True)
+        for i in range(num_plots):
+            self.pdf.cell(col_width, 10, f"Plot {i + 1}", border=1, fill=True)
+        self.pdf.ln()
+
+        metrics = ["Mean", "Std", "Maximum", "Minimum"]
+        data_lists = [mean, std, maximum, minimum]
+
+        for metric, data_list in zip(metrics, data_lists):
+            self.pdf.cell(col_width, 10, metric, border=1)
+            for value in data_list:
+                self.pdf.cell(col_width, 10, f"{value: .4f}", border=1)
+            self.pdf.ln(10)
+
+    def get_signal_statistics(self, graph_widget: str):
+        statistics = []
+        for signal in self.signals[graph_widget]:
+            _, data = signal[0]
+            mean = np.mean(data)
+            std = np.std(data)
+            maximum = np.max(data)
+            minimum = np.min(data)
+            statistics.append([mean, std, maximum, minimum])
+        return statistics
+
+    def access_nested_list_items(self, nested_list):
+        mean_list, std_list, max_list, min_list = [], [], [], []
+
+        for sublist in nested_list:
+            if len(sublist) == 4:
+                mean_list.append(sublist[0])
+                std_list.append(sublist[1])
+                max_list.append(sublist[2])
+                min_list.append(sublist[3])
+
+        return mean_list, std_list, max_list, min_list
+
+    def save_pdf(self):
+        self.pdf.output(str(self.folder_path))
+        # This message appears when the PDF is EXPORTED
+        QMessageBox.information(self, 'Done', 'PDF has been created')
+        for i in range(len(self.snapshoot_data)):
+            os.remove(f"Screenshot_{i}.png")
+
+    def create_report(self, graph_widget, pdf_title="Signal_Report.pdf"):
+        self.folder_path, _ = QFileDialog.getSaveFileName(
+            None, 'Save the signal file', None, 'PDF Files (*.pdf)')
+        if self.folder_path:
+            self.pdf = FPDF()
+            self.pdf.add_page()
+            self.add_page_border()
+            self.add_title("Signal Report")
+            self.add_logos()
+            self.add_snapshots_to_pdf(self.pdf)
+            self.add_statistics_tables()
+            self.save_pdf()
 
 
 
