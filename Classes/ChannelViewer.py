@@ -149,7 +149,7 @@ class ChannelViewer(QWidget):
         self.glue_button.clicked.connect(self.toggle_glue_editor)
         self.snapshot_button.clicked.connect(self.take_snapshot)
         self.action_glue_button.clicked.connect(self.glue_action)
-        self.real_time_button.clicked.connect(self.browse_url)
+        self.real_time_button.clicked.connect(self.fetch_real_time_signal)
         self.upload_button.clicked.connect(self.upload_file)
 
     def clear_glue_editor(self):
@@ -373,6 +373,63 @@ class ChannelViewer(QWidget):
                 self.active_signals.append(signal)
                 self.add_signal_to_list(len(self.active_signals) - 1)
 
+    def fetch_real_time_signal(self):
+        """Fetch real-time signal data (satellite positions) from an API and update the graphs."""
+        try:
+
+            base_url = "https://api.n2yo.com/rest/v1/satellite/positions"
+            satellite_id = "25544"
+            observer_lat = "41.702"
+            observer_lon = "-76.014"
+            observer_alt = "0"
+            seconds = "300"
+            api_key = "PECZAW-Y3BFYT-4TJFVE-5CUH"
+
+
+            api_url = f"{base_url}/{satellite_id}/{observer_lat}/{observer_lon}/{observer_alt}/{seconds}/&apiKey={api_key}"
+
+
+            response = requests.get(api_url)
+
+
+            if response.status_code != 200:
+                raise Exception(f"Failed to fetch data: {response.status_code} {response.reason}")
+
+
+            data = response.json()
+
+
+            if 'positions' not in data:
+                raise KeyError("Response is missing 'positions' data")
+
+
+            time_points = [pos['timestamp'] for pos in data['positions']]
+            signal_values = [pos['satlatitude'] for pos in data['positions']]
+
+
+            real_time_signal = {
+                'x': np.array(time_points, dtype=float),
+                'y': np.array(signal_values, dtype=float)  #
+            }
+
+
+            self.active_signals.append(real_time_signal)
+            self.add_signal_to_list(len(self.active_signals) - 1)
+
+
+            display_rect_signal(real_time_signal, self.graph1)
+            display_polar_signal(real_time_signal, polar_canvas=self.polar1_canvas, polar_ax=self.polar1_ax)
+            display_rect_signal(real_time_signal, self.graph2)
+            display_polar_signal(real_time_signal, polar_canvas=self.polar2_canvas, polar_ax=self.polar2_ax)
+
+        except requests.exceptions.RequestException as e:
+            QMessageBox.critical(self, "Error", f"Network error: {str(e)}")
+        except KeyError as e:
+            QMessageBox.critical(self, "Error", f"Missing data in response: {str(e)}")
+        except ValueError as e:
+            QMessageBox.critical(self, "Error", f"Value error: {str(e)}")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to fetch real-time signal: {str(e)}")
     def browse_url(self):
         url = self.input_url.text().strip()
         if "kaggle.com" not in url:
