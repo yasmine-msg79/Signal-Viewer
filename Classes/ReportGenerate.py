@@ -8,11 +8,18 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
+import ChannelViewer
+
 
 class SignalReportGenerator(QWidget):
-    def __init__(self, snapshots):
+    def __init__(self, snapshots_list):
         super().__init__()
-        self.snapshots = snapshots  # List of snapshots passed from ChannelViewer
+        self.timer = None
+        self.signal_data = None
+        self.generate_button = None
+        self.snapshot_list = None
+        self.layout = None
+        self.snapshots = snapshots_list  # List of snapshots passed from ChannelViewer
         self.setup_ui()
         self.initialize_real_time_data()
 
@@ -25,7 +32,7 @@ class SignalReportGenerator(QWidget):
         # Dropdown menu for snapshot selection (changed to QListWidget for multiple selections)
         self.snapshot_list = QListWidget(self)
         self.snapshot_list.setSelectionMode(QListWidget.MultiSelection)
-        
+
         # Populate the list with snapshots
         for snapshot in self.snapshots:
             self.snapshot_list.addItem(snapshot['name'])  # Display snapshot names
@@ -72,21 +79,23 @@ class SignalReportGenerator(QWidget):
         selected_signal_data = self.signal_data["Signal"]
 
         # Calculate basic statistics for the report
-        mean = sum(selected_signal_data) / len(selected_signal_data) if selected_signal_data else 0
-        std_dev = (sum((x - mean) ** 2 for x in selected_signal_data) / len(selected_signal_data)) ** 0.5 if selected_signal_data else 0
-        min_value = min(selected_signal_data, default=0)
-        max_value = max(selected_signal_data, default=0)
-        duration = len(selected_signal_data) * 0.5  # Assuming each data point represents 0.5 seconds
-        
-        # Prepare stats for the report
-        stats = [{
-            "Signal": "Signal",
-            "Mean": mean,
-            "Std Dev": std_dev,
-            "Min": min_value,
-            "Max": max_value,
-            "Duration": duration
-        }]
+        # mean = sum(selected_signal_data) / len(selected_signal_data) if selected_signal_data else 0
+        # std_dev = (sum((x - mean) ** 2 for x in selected_signal_data) / len(
+        #     selected_signal_data)) ** 0.5 if selected_signal_data else 0
+        # min_value = min(selected_signal_data, default=0)
+        # max_value = max(selected_signal_data, default=0)
+        # duration = len(selected_signal_data) * 0.5  # Assuming each data point represents 0.5 seconds
+        #
+        # # Prepare stats for the report
+        # stats = [{
+        #     "Mean": mean,
+        #     "Std Dev": std_dev,
+        #     "Min": min_value,
+        #     "Max": max_value,
+        #     "Duration": duration
+        # }]
+
+        stats = ChannelViewer.get_signal_stat()
 
         # Generate PDF report with the selected snapshots
         self.create_pdf_report(stats, selected_snapshots)
@@ -107,12 +116,11 @@ class SignalReportGenerator(QWidget):
         elements.append(Spacer(1, 0.2 * inch))
 
         # Statistics table (using 'Signal')
-        table_data = [["Signal Type", "Mean", "Std Dev", "Min", "Max", "Duration (s)"]]
+        table_data = [["Mean", "Std", "Min", "Max", "Duration (s)"]]
         for stat in stats:
             table_data.append([
-                stat.get("Signal", "Unknown"),
                 f"{stat.get('Mean', 0):.2f}",
-                f"{stat.get('Std Dev', 0):.2f}",
+                f"{stat.get('Std', 0):.2f}",
                 f"{stat.get('Min', 0):.2f}",
                 f"{stat.get('Max', 0):.2f}",
                 f"{stat.get('Duration', 0):.2f}"
@@ -151,6 +159,7 @@ class SignalReportGenerator(QWidget):
         # Finalize the PDF document
         pdf.build(elements)
         QMessageBox.information(self, "Success!", "Your report has been successfully created and saved!")
+
 
 if __name__ == '__main__':
     # Example snapshot data passed from ChannelViewer
