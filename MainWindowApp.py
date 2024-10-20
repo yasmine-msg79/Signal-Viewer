@@ -1162,56 +1162,86 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.signals_lines[graph][i].setVisible(True)
             self.hideButton.setText("Hide")
 
+
+    # Including X and Y Ranges for Glue
+
     def toggle_play_pause(self): # Play and Pause Graphs
-        if self.current_graph == self.graph1:
-            if self.is_playing[0]["is_playing"]: # Check if graph 1 is playing 
-                self.is_playing[0]["is_playing"] = False
-                self.playButton.setText('Play')
-                self.set_icon("Icons/play-svgrepo-com.svg")
-                last_data = self.get_last_data_point("graph1")[0]
-                self.graph1.setLimits(xMin=0)
-                self.graph1.setLimits(yMin=-0.5, yMax=1)
-            else:                                 # Check if graph 1 is not playing
-                self.is_playing[0]["is_playing"] = True
-                self.playButton.setText('Pause')
-                self.set_icon("Icons/pause.svg")
-
-        elif self.current_graph == self.graph2:
-            if self.is_playing[1]["is_playing"]:
-                self.is_playing[1]["is_playing"] = False
-                self.playButton.setText('Play')
-                self.set_icon("Icons/play-svgrepo-com.svg")
-                last_data = self.get_last_data_point("graph2")[0]
-                self.graph2.setLimits(xMin=0, xMax=last_data)
-                self.graph2.setLimits(yMin=-0.5, yMax=1)
-
-            else:
-                self.is_playing[1]["is_playing"] = True
-                self.playButton.setText('Pause')
-                self.set_icon("Icons/pause.svg")
-                # Allow free panning when playing
-                # self.set_panning_limits(self.graph2, False)
-
-        else:  # link mode
-            last_data = min(self.get_last_data_point("graph1")[0], self.get_last_data_point("graph2")[0])
-            for graph in self.is_playing:
-                if graph["is_playing"]:
-                    graph["is_playing"] = False
+            
+            if self.current_graph == self.graph1:
+                if self.is_playing[0]["is_playing"]: # Check if graph 1 is playing 
+                    self.is_playing[0]["is_playing"] = False
                     self.playButton.setText('Play')
                     self.set_icon("Icons/play-svgrepo-com.svg")
-                    # Restrict panning beyond the last data point when pausing
-                    # self.set_panning_limits(self.current_graph, True)
-                    self.graph1.setLimits(xMin=0, xMax=last_data)
-                    self.graph2.setLimits(xMin=0, xMax=last_data)
+                    
+                    ######----->Yasmine  Get current view range for X and Y axes
+                    self.graph1_x_range = self.graph1.viewRange()[0]
+                    self.graph1_y_range = self.graph1.viewRange()[1]
+                    print(f"X-axis view range for graph1: Start = {self.graph1_x_range[0]}, End = {self.graph1_x_range[1]}")
+                    print(f"Y-axis view range for graph1: Start = {self.graph1_y_range[0]}, End = {self.graph1_y_range[1]}")
+                    
+                    last_data = self.get_last_data_point("graph1")[0]
+                    self.graph1.setLimits(xMin=0)
                     self.graph1.setLimits(yMin=-0.5, yMax=1)
+                else:                                 # Check if graph 1 is not playing
+                    self.is_playing[0]["is_playing"] = True
+                    self.playButton.setText('Pause')
+                    self.set_icon("Icons/pause.svg")
+
+            elif self.current_graph == self.graph2:
+                if self.is_playing[1]["is_playing"]:
+                    self.is_playing[1]["is_playing"] = False
+                    self.playButton.setText('Play')
+                    self.set_icon("Icons/play-svgrepo-com.svg")
+                    
+                    ######----->Yasmine  Get current view range for X and Y axes
+                    self.graph2_x_range = self.graph2.viewRange()[0]
+                    self.graph2_y_range = self.graph2.viewRange()[1]
+                    print(f"X-axis view range for graph2: Start = {self.graph2_x_range[0]}, End = {self.graph2_x_range[1]}")
+                    print(f"Y-axis view range for graph2: Start = {self.graph2_y_range[0]}, End = {self.graph2_y_range[1]}")
+                    
+                    last_data = self.get_last_data_point("graph2")[0]
+                    self.graph2.setLimits(xMin=0, xMax=last_data)
                     self.graph2.setLimits(yMin=-0.5, yMax=1)
+
                 else:
-                    graph["is_playing"] = True
+                    self.is_playing[1]["is_playing"] = True
                     self.playButton.setText('Pause')
                     self.set_icon("Icons/pause.svg")
                     # Allow free panning when playing
-                    # self.set_panning_limits(self.current_graph, False)
+                    # self.set_panning_limits(self.graph2, False)
 
+            else:  # link mode
+                last_data = min(self.get_last_data_point("graph1")[0], self.get_last_data_point("graph2")[0])
+                for graph in self.is_playing:
+                    if graph["is_playing"]:
+                        graph["is_playing"] = False
+                        self.playButton.setText('Play')
+                        self.set_icon("Icons/play-svgrepo-com.svg")
+                        
+                        ######----->Yasmine  Get current view range for X and Y axes
+                        self.graph1_x_range = self.graph1.viewRange()[0]
+                        self.graph1_y_range = self.graph1.viewRange()[1]
+                        self.graph2_x_range = self.graph2.viewRange()[0]
+                        self.graph2_y_range = self.graph2.viewRange()[1]
+                        print(f"X-axis view range for graph1: Start = {self.graph1_x_range[0]}, End = {self.graph1_x_range[1]}")
+                        print(f"Y-axis view range for graph1: Start = {self.graph1_y_range[0]}, End = {self.graph1_y_range[1]}")
+                        print(f"X-axis view range for graph2: Start = {self.graph2_x_range[0]}, End = {self.graph2_x_range[1]}")
+                        print(f"Y-axis view range for graph2: Start = {self.graph2_y_range[0]}, End = {self.graph2_y_range[1]}")
+
+                        
+                        # Restrict panning beyond the last data point when pausing
+                        # self.set_panning_limits(self.current_graph, True)
+                        self.graph1.setLimits(xMin=0, xMax=last_data)
+                        self.graph2.setLimits(xMin=0, xMax=last_data)
+                        self.graph1.setLimits(yMin=-0.5, yMax=1)
+                        self.graph2.setLimits(yMin=-0.5, yMax=1)
+                    else:
+                        graph["is_playing"] = True
+                        self.playButton.setText('Pause')
+                        self.set_icon("Icons/pause.svg")
+                        # Allow free panning when playing
+                        # self.set_panning_limits(self.current_graph, False)
+    
     def get_last_data_point(self, graph):
         if graph in self.signals and self.signals[graph]:
             last_signal = self.signals[graph][-1] # - VE Index
