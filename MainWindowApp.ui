@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1384</width>
+    <width>1622</width>
     <height>821</height>
    </rect>
   </property>
@@ -245,7 +245,7 @@ QListWidget::item:selected {
 }
 
 QListWidget::item:hover {
-    background-color: #e0e0e0; /* Background color when hovering over an item */
+    background-color: rgb(39, 120, 163); /* Background color when hovering over an item */
 }
 </string>
          </property>
@@ -301,7 +301,7 @@ QListWidget::item:selected {
 }
 
 QListWidget::item:hover {
-    background-color: #e0e0e0; /* Background color when hovering over an item */
+    background-color: rgb(39, 120, 163); /* Background color when hovering over an item */
 }
 </string>
          </property>
@@ -403,7 +403,7 @@ color: #fff;</string>
                  <x>0</x>
                  <y>0</y>
                  <width>881</width>
-                 <height>271</height>
+                 <height>251</height>
                 </rect>
                </property>
               </widget>
@@ -872,9 +872,9 @@ color: #fff;</string>
                <property name="geometry">
                 <rect>
                  <x>0</x>
-                 <y>-10</y>
+                 <y>0</y>
                  <width>881</width>
-                 <height>251</height>
+                 <height>231</height>
                 </rect>
                </property>
                <property name="maximumSize">
@@ -919,7 +919,7 @@ color: #fff;</string>
             <number>20</number>
            </property>
            <property name="bottomMargin">
-            <number>20</number>
+            <number>0</number>
            </property>
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_5">
@@ -1965,7 +1965,7 @@ background-color:  rgb(0, 115, 173);
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1384</width>
+     <width>1622</width>
      <height>26</height>
     </rect>
    </property>
