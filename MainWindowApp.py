@@ -80,6 +80,56 @@ class RealTimeCpuPlot(QtWidgets.QWidget):
 from PyQt6.QtWidgets import QInputDialog, QMessageBox
 # from pyqtgraph import PolarPlotItem
 
+class RealTimeSatellitePlot(QtWidgets.QWidget):
+
+    def __init__(self, *args, **kwargs):
+        super(RealTimeSatellitePlot, self).__init__(*args, **kwargs)
+        
+        # Set window title and size
+        self.setWindowTitle("Real-Time Satellite Position")
+        self.setGeometry(100, 100, 800, 600)
+        
+        # Create layout and plot widget
+        self.layout = QtWidgets.QVBoxLayout(self)
+        self.plot_widget = pg.PlotWidget()
+        self.layout.addWidget(self.plot_widget)
+        
+        # Initialize plot data
+        self.plot_data = self.plot_widget.plot()
+        
+        # Set labels and legend for the plot
+        self.plot_widget.setLabel('left', 'Position')
+        self.plot_widget.setLabel('bottom', 'Time (s)')
+        self.plot_widget.addLegend()
+        self.plot_data = self.plot_widget.plot(name="Satellite Position")
+        
+        # Set up a timer to update the plot every second
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.update_plot)
+        self.timer.start(1000)
+        
+        # Initialize data list to store satellite position values
+        self.data = []
+
+    def update_plot(self):
+        # Fetch actual satellite position data from an API or a data source
+        try:
+            response = requests.get("https://api.wheretheiss.at/v1/satellites/25544")
+            data = response.json()
+            satellite_position = data['latitude']  # Example: using latitude as the position data
+            
+            # Append the satellite position to the data list
+            self.data.append(satellite_position)
+            
+            # # Keep only the last 100 data points
+            # if len(self.data) > 100:
+            #     self.data.pop(0)
+            
+            # Update the plot with the new data
+            self.plot_data.setData(self.data)
+        except Exception as e:
+            print(f"Error fetching satellite data: {e}")
+
 from scipy import interpolate 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -123,7 +173,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def init_ui(self):
         # Load the UI Page
-        self.ui = uic.loadUi('MainWindowAppLastEND.ui', self)
+        self.ui = uic.loadUi('MainWindowApp.ui', self)
         self.setWindowTitle("Multi-Channel Signal Viewer Team 1")
             # self.setWindowIcon(QIcon("Icons/ECG.png"))
 
@@ -175,8 +225,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.zoomIn.clicked.connect(self.zoom_in)
         self.zoomOut.clicked.connect(self.zoom_out)
         self.glue_Button.clicked.connect(self.glue_graphs)
-        self.snapshot_Button.clicked.connect(self.take_snapshot)
-        self.reportButton.clicked.connect(self.generate_signal_report)
+        self.nonRectangular_Button.clicked.connect(self.Non_Rectangular_Function)
         # Apply CSS to make fonts bold and enhance ComboBox design
         self.setStyleSheet("""
             QPushButton, QComboBox, QLabel {
@@ -585,11 +634,16 @@ class MainWindow(QtWidgets.QMainWindow):
         return None
     
     def connectFunction(self):
-        # i want when i click on this buttin the new window apear and run RealTimeDataCPU_Usage python file
+        # i want when i click on this button the new window apear and run RealTimeDataCPU_Usage python file
         
         # Create a new window for the real-time CPU usage plot
         self.real_time_cpu_plot = RealTimeCpuPlot()
         self.real_time_cpu_plot.show()
+
+        # Create a new window for thr real-time satellite position plot
+        self.real_time_satellite_plot = RealTimeSatellitePlot()
+        self.real_time_satellite_plot.show()
+
 
     def open_file(self, path: str):
         # Initialize time and data lists
@@ -1368,24 +1422,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 
-    # ************************************** Snapshot , Glue and PDF Report ************************************** #
+    # ************************************** NonRectangular , Glue  ************************************** #
 
 
-    # Snapshot Function
-    def take_snapshot(self):
-        """
-        Captures the current state of the graph and saves it as an image file.
-        """
-        # Prompt user to choose save location
-        file_path, _ = QFileDialog.getSaveFileName(self, "Save Snapshot", "", "PNG Image (*.png);;All Files (*)")
-        
-        if file_path:
-            # Export the current graph to an image file
-            exporter = pg.exporters.ImageExporter(self.current_graph.plotItem)
-            exporter.export(file_path)
-            
-            # Show confirmation message
-            QMessageBox.information(self, "Snapshot Saved", f"Snapshot saved at {file_path}")
+    # Non_Rectangular_Function 
+    def Non_Rectangular_Function(self):
+         pass 
 
 
 
@@ -1393,201 +1435,20 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 
-
-
-
-
-    from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QSlider
-    import numpy as np
-    from pyqtgraph import PlotWidget    
-
+  
     # GLUIE FUNCTION                        ###################### لسه مخلصتش ####################
 
     def glue_graphs(self):
-        pass
-    # 
-    # :
-    #     # Ensure that there are at least two signals in both graphs
-    #     if len(self.signals['graph1']) < 1 or len(self.signals['graph2']) < 1:
-    #         self.show_error_message("Each graph must contain at least 1 signal.")
-    #         return
-
-    #     # Select signals from both graph1 and graph2
-    #     signals_to_glue = [
-    #         self.signals['graph1'][0][0][1],  # Example: selecting the first signal from graph1
-    #         self.signals['graph2'][0][0][1]   # Example: selecting the first signal from graph2
-    #     ]
-
-    #     # Function to concatenate signals with an optional gap
-    #     def concatenate_signals(signals, gap):
-    #         glued_signal = signals[0]  # Start with the first signal
-    #         for sig in signals[1:]:
-    #             if gap > 0:
-    #                 glued_signal = np.concatenate((glued_signal, np.zeros(gap), sig))  # Add gap
-    #             elif gap < 0:
-    #                 overlap_length = min(abs(gap), len(glued_signal), len(sig))
-    #                 overlap = (glued_signal[-overlap_length:] + sig[:overlap_length]) / 2  # Overlap averaging
-    #                 glued_signal = np.concatenate((glued_signal[:-overlap_length], overlap, sig[overlap_length:]))
-    #             else:
-    #                 glued_signal = np.concatenate((glued_signal, sig))  # No gap or overlap
-    #         return glued_signal
-
-    #     # Create a window for displaying the glued signal
-    #     glued_signal_window = QWidget()
-    #     glued_signal_window.setWindowTitle("Glued Signals")
-    #     layout = QVBoxLayout()
-
-    #     # Add a PlotWidget to display the glued signal
-    #     plot_widget = PlotWidget()
-    #     layout.addWidget(plot_widget)
-
-    #     # Add a slider for adjusting the gap/overlap
-    #     gap_slider = QSlider(QtCore.Qt.Orientation.Horizontal)
-    #     gap_slider.setRange(-50, 100)  # Negative for overlap, positive for gap
-    #     gap_slider.setValue(0)  # Default gap
-    #     layout.addWidget(gap_slider)
-
-    #     gap_label = QLabel("Gap: 0 samples")
-    #     layout.addWidget(gap_label)
-
-    #     # Function to update the glued signal based on the slider value
-    #     def update_glued_signal():
-    #         gap = gap_slider.value()
-    #         glued_signal = concatenate_signals(signals_to_glue, gap)
-    #         plot_widget.clear()
-    #         plot_widget.plot(glued_signal, pen='g')  # Plot the glued signal
-    #         gap_label.setText(f"Gap: {gap} samples")
-
-    #     # Connect the slider to update the glued signal when the gap changes
-    #     gap_slider.valueChanged.connect(update_glued_signal)
-
-    #     # Show the initial glued signal
-    #     update_glued_signal()
-
-    #     glued_signal_window.setLayout(layout)
-    #     glued_signal_window.resize(800, 600)
-    #     glued_signal_window.show()
-
-    #     # Keep a reference to prevent the window from closing
-    #     self.glued_signal_window = glued_signal_window
-
-
+            pass
         
+ 
 
 
 
 
 
 
-
-    # REPORT FUNCTION
-
-    from fpdf import FPDF
-    import numpy as np
-    import os
-    import pyqtgraph as pg
-    from PyQt6.QtWidgets import QFileDialog, QMessageBox
-
-    def generate_signal_report(self):
-        """
-        Generate a PDF report that contains information about the signals, including 
-        mean, std deviation, min/max values, and an image of the target signal.
-        """
-        class PDF(FPDF):
-            def header(self):
-                self.set_font('Arial', 'B', 12)
-                self.cell(0, 10, 'Signal Report', 0, 1, 'C')
-
-            def footer(self):
-                self.set_y(-15)
-                self.set_font('Arial', 'I', 8)
-                self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
-
-        # Determine the current graph
-        graph_name = self.get_graph_name()
-        graphs = []
-
-        if graph_name == "both":
-            if self.signals["graph1"] and self.signals["graph2"]:
-                graphs = ["graph1", "graph2"]
-            else:
-                self.show_error_message("Both graphs must contain signals.")
-                return
-        else:
-            if self.signals[graph_name]:
-                graphs = [graph_name]
-            else:
-                self.show_error_message(f"{graph_name} must contain signals.")
-                return
-
-        # Prompt user to choose save location for the report
-        file_path, _ = QFileDialog.getSaveFileName(self, "Save Report", "", "PDF Files (*.pdf);;All Files (*)")
-        
-        if file_path:
-            # Initialize the PDF
-            pdf = PDF()
-            
-            for graph in graphs:
-                pdf.add_page()
-
-                # Title Section
-                pdf.set_font("Arial", 'B', 20)
-                pdf.cell(0, 10, f"Signal Analysis Report - {graph}", ln=True, align="C")
-                pdf.ln(10)
-
-                # Add Target Signal Snapshot Section
-                pdf.set_font("Arial", 'B', 16)
-                pdf.cell(0, 10, "Signal Snapshot", ln=True, align="C")
-                pdf.ln(10)
-
-                # Save the current graph as an image and insert into the PDF
-                target_signal_image_path = f"target_signal_snapshot_{graph}.png"
-                exporter = pg.exporters.ImageExporter(self.lookup[graph].plotItem)
-                exporter.export(target_signal_image_path)
-                pdf.image(target_signal_image_path, x=(pdf.w - 180) / 2, y=None, w=180, h=80, type='PNG')
-                pdf.ln(10)
-                os.remove(target_signal_image_path)  # Clean up after export
-
-                # Calculate signal statistics (mean, std, min, max) up to the last plotted value
-                end_index = self.signals[graph][-1][1]  # Last plotted index in the selected graph
-                target_signal = self.signals[graph][-1][0][1][:end_index]  # Signal data up to the last plotted value
-                signal_mean = np.mean(target_signal)
-                signal_std = np.std(target_signal)
-                signal_min = np.min(target_signal)
-                signal_max = np.max(target_signal)
-
-                # Add Signal Statistics Section
-                pdf.set_font("Arial", 'B', 16)
-                pdf.cell(0, 10, "Signal Statistics", ln=True, align="C")
-                pdf.ln(10)
-
-                # Create a table for the statistics
-                pdf.set_font("Arial", '', 12)
-                table_width = 100
-                pdf.set_x((pdf.w - table_width) / 2)  # Center the table
-                pdf.cell(50, 10, 'Statistic', 1, 0, 'C')
-                pdf.cell(50, 10, 'Value', 1, 1, 'C')
-
-                pdf.set_x((pdf.w - table_width) / 2)  # Center the table
-                pdf.cell(50, 10, 'Mean', 1, 0, 'C')
-                pdf.cell(50, 10, f"{signal_mean:.2f}", 1, 1, 'C')
-
-                pdf.set_x((pdf.w - table_width) / 2)  # Center the table
-                pdf.cell(50, 10, 'Std Deviation', 1, 0, 'C')
-                pdf.cell(50, 10, f"{signal_std:.2f}", 1, 1, 'C')
-
-                pdf.set_x((pdf.w - table_width) / 2)  # Center the table
-                pdf.cell(50, 10, 'Min Value', 1, 0, 'C')
-                pdf.cell(50, 10, f"{signal_min:.2f}", 1, 1, 'C')
-
-                pdf.set_x((pdf.w - table_width) / 2)  # Center the table
-                pdf.cell(50, 10, 'Max Value', 1, 0, 'C')
-                pdf.cell(50, 10, f"{signal_max:.2f}", 1, 1, 'C')
-
-            # Save the report as a PDF file
-            pdf.output(file_path)
-            QMessageBox.information(self, "Report Generated", f"Report saved at {file_path}")
-
+  
 
 # ************************************** Main Function ************************************** #
 
