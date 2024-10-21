@@ -1,9 +1,9 @@
 import random
 import sys
-from PyQt5 import uic
+from PyQt6 import uic
 import numpy as np
-from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
-from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QListWidget, QPushButton, QFrame, QApplication, QDialog, QMessageBox,
+from PyQt6.QtGui import QPixmap, QPainter, QPen, QColor
+from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QListWidget, QPushButton, QFrame, QApplication, QDialog, QMessageBox,
                              QFileDialog, QGroupBox, QHBoxLayout, QCheckBox, QLineEdit, QListWidgetItem, QSizePolicy,
                              QSlider, QLabel)
 import pyqtgraph as pg
@@ -37,14 +37,14 @@ def get_signal_stat():
 
 
 class ChannelViewer(QWidget):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super(ChannelViewer, self).__init__(*args, **kwargs)
         self.limit_graph2 = None
         self.limit_graph1 = None
         self.signal2 = None
         self.signal1 = None
         self.report_window = None
-        uic.loadUi(r"..\UI\channel_viewer.ui", self)
+        uic.loadUi(r"UI\channel_viewer.ui", self)
 
         self.graph1 = pg.PlotWidget(self)
         self.graph1.setBackground('black')
@@ -418,4 +418,4 @@ if __name__ == "__main__":
     window = ChannelViewer()
     window.setWindowTitle("Glue Editor")
     window.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

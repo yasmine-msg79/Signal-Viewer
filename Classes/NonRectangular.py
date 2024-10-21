@@ -1,8 +1,8 @@
 import sys
 
-from PyQt5 import uic
-from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QWidget, QApplication, QFileDialog, QVBoxLayout, QPushButton, QDialog
+from PyQt6 import uic
+from PyQt6.QtCore import QTimer
+from PyQt6.QtWidgets import QWidget, QApplication, QFileDialog, QVBoxLayout, QPushButton, QDialog
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import numpy as np
@@ -49,9 +49,9 @@ def extract_signal_data(source):
 
 
 class NonRectangularPlot(QDialog):
-    def __init__(self):
-        super().__init__()
-        uic.loadUi(r"..\UI\Non_rectangular.ui", self)
+    def __init__(self, *args, **kwargs):
+        super(NonRectangularPlot, self).__init__(*args, **kwargs)
+        uic.loadUi(r"UI\Non_rectangular.ui", self)
         self.signal = None
         self.is_playing = False
         self.current_index = 0
@@ -117,4 +117,4 @@ if __name__ == "__main__":
     window = NonRectangularPlot()
     window.setWindowTitle("Non-rectangular Plot")
     window.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

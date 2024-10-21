@@ -1,8 +1,8 @@
 import sys
 import os
 import random
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QComboBox, QMessageBox, QListWidget
-from PyQt5.QtCore import QTimer
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QComboBox, QMessageBox, QListWidget
+from PyQt6.QtCore import QTimer
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.lib.units import inch
@@ -12,8 +12,8 @@ from Classes import ChannelViewer
 
 
 class SignalReportGenerator(QWidget):
-    def __init__(self, snapshots_list):
-        super().__init__()
+    def __init__(self, snapshots_list, *args, **kwargs):
+        super(SignalReportGenerator, self).__init__(*args, **kwargs)
         self.timer = None
         self.signal_data = None
         self.generate_button = None
@@ -170,4 +170,4 @@ if __name__ == '__main__':
     report_widget.setWindowTitle("Snapshot Report Generator")
     report_widget.resize(400, 300)
     report_widget.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
