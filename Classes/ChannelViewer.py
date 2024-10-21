@@ -2,6 +2,7 @@ import random
 import sys
 from PyQt6 import uic
 import numpy as np
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap, QPainter, QPen, QColor
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QListWidget, QPushButton, QFrame, QApplication, QDialog, QMessageBox,
                              QFileDialog, QGroupBox, QHBoxLayout, QCheckBox, QLineEdit, QListWidgetItem, QSizePolicy,
@@ -20,6 +21,7 @@ def plot_rect(signal, rect_plot):
     rect_plot.setLabel('bottom', 'Time')
     rect_plot.showGrid(x=True, y=True)
     rect_plot.setLimits(xMin=min(signal['x']), xMax=max(signal['x']))
+    rect_plot.setLimits(yMin=min(signal['y']), yMax=max(signal['y']))
     rect_plot.signal = signal
 
 
@@ -32,21 +34,27 @@ def display_rect_signal(signal, viewer):
     viewer.signal = signal
 
 
-def get_signal_stat():
-    return ChannelViewer().glued_statistics
+# def get_signal_stat():
+#     return ChannelViewer().glued_statistics
 
 
-class ChannelViewer(QWidget):
-    def __init__(self, *args, **kwargs):
+class ChannelViewer(QDialog):
+    def __init__(self, glue_items, *args, **kwargs):
         super(ChannelViewer, self).__init__(*args, **kwargs)
         # self.limit_graph2 = None
         # self.limit_graph1 = None
         # self.signal2 = None
         # self.signal1 = None
+        self.glue_data = glue_items
         self.report_window = None
+        self.start_line1 = None
+        self.end_line1 = None
+        self.start_line2 = None
+        self.end_line2 = None
         uic.loadUi(r"UI\channel_viewer.ui", self)
 
-        limit_1, limit_2, signal1, signal2 = MainWindowApp.MainWindow.get_glue_data()
+        limit_1, limit_2, signal1, signal2 = self.glue_data
+        self.graph1 = pg.PlotWidget(self)
         self.graph1.setBackground('black')
         self.graph1.signal = signal1
 
@@ -57,9 +65,9 @@ class ChannelViewer(QWidget):
         self.Glue_Editor = pg.PlotWidget(self)
         self.Glue_Editor.setBackground('black')
 
-        self.graph_1 = self.findChild(QFrame, "graph1")
-        self.graph_2 = self.findChild(QFrame, "graph2")
-        self.glue_editor = self.findChild(QFrame, "GlueEditor")
+        self.graph_1 = self.findChild(QWidget, "graph1")
+        self.graph_2 = self.findChild(QWidget, "graph2")
+        self.glue_editor = self.findChild(QWidget, "GlueEditor")
         self.clear_button = self.findChild(QPushButton, "Clear")
         self.glue_button = self.findChild(QPushButton, "toggle_glue")
         self.snapshot_button = self.findChild(QPushButton, "Snapshot")
@@ -82,19 +90,14 @@ class ChannelViewer(QWidget):
         self.glued_statistics = []
         self.snapshots = []
         self.selected_segments = []
-        self.start_line1 = None
-        self.end_line1 = None
-        self.start_line2 = None
-        self.end_line2 = None
-
         self.graph1.setObjectName("graph1")
         self.graph2.setObjectName("graph2")
 
         # sample signals to test ui
         # self.signal1 = generate_signal(50)
         # self.signal2 = generate_signal(50)
-        # plot_rect(self.signal1, self.graph1)
-        # plot_rect(self.signal2, self.graph2)
+        plot_rect(self.graph1.signal, self.graph1)
+        plot_rect(self.graph2.signal, self.graph2)
 
         # display_rect_signal(self.signal1, self.graph1)
         # display_rect_signal(self.signal2, self.graph2)
@@ -151,6 +154,10 @@ class ChannelViewer(QWidget):
 
     def toggle_glue_editor(self):
         if self.glue_button.isChecked():
+            self.start_line1 = None
+            self.end_line1 = None
+            self.start_line2 = None
+            self.end_line2 = None
             self.glue_editor.show()
             self.add_segment_selection_lines()
             self.clear_button.show()
@@ -182,13 +189,13 @@ class ChannelViewer(QWidget):
     def add_segment_selection_lines(self):
         if self.start_line1 is None and self.end_line1 is None and self.start_line2 is None and self.end_line2 is None:
             self.start_line1 = pg.InfiniteLine(pos=0.1 * len(self.graph1.signal['x']), angle=90, movable=True,
-                                               pen=pg.mkPen(color='r', width=2, style=pg.QtCore.Qt.DashLine))
+                                               pen=pg.mkPen(color='r', width=2))
             self.end_line1 = pg.InfiniteLine(pos=0.2 * len(self.graph1.signal['x']), angle=90, movable=True,
-                                             pen=pg.mkPen(color='g', width=2, style=pg.QtCore.Qt.DashLine))
+                                             pen=pg.mkPen(color='g', width=2))
             self.start_line2 = pg.InfiniteLine(pos=0.1 * len(self.graph1.signal['x']), angle=90, movable=True,
-                                               pen=pg.mkPen(color='r', width=2, style=pg.QtCore.Qt.DashLine))
+                                               pen=pg.mkPen(color='r', width=2))
             self.end_line2 = pg.InfiniteLine(pos=0.2 * len(self.graph1.signal['x']), angle=90, movable=True,
-                                             pen=pg.mkPen(color='g', width=2, style=pg.QtCore.Qt.DashLine))
+                                             pen=pg.mkPen(color='g', width=2, style='-'))
 
             self.graph1.addItem(self.start_line1)
             self.graph1.addItem(self.end_line1)

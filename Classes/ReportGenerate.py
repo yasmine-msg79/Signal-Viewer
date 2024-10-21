@@ -1,7 +1,8 @@
 import sys
 import os
 import random
-from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QComboBox, QMessageBox, QListWidget
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QComboBox, QMessageBox, \
+    QListWidget, QAbstractItemView
 from PyQt6.QtCore import QTimer
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
@@ -31,7 +32,7 @@ class SignalReportGenerator(QWidget):
 
         # Dropdown menu for snapshot selection (changed to QListWidget for multiple selections)
         self.snapshot_list = QListWidget(self)
-        self.snapshot_list.setSelectionMode(QListWidget.MultiSelection)
+        self.snapshot_list.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
 
         # Populate the list with snapshots
         for snapshot in self.snapshots:

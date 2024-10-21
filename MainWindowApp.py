@@ -27,8 +27,6 @@ import requests
 from Classes import ChannelViewer, NonRectangular
 
 
-
-
 class RealTimeCpuPlot(QtWidgets.QWidget):
 
     def __init__(self, *args, **kwargs):
@@ -139,12 +137,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.limits_glue2 = None
         self.limits_glue1 = None
         self.graph1_x_range = None
+        self.graph2_x_range = None
         self.graph2_y_range = None
         self.graph1_y_range = None
         self.glue_window = None
         self.non_rect_window = None
-        self.graph1_1_range = None
-        self.graph2_x_range = None
+
         # Initialize signal data structures
         self.signals = {"graph1": [], "graph2": []}
         self.signals_lines = {"graph1": [], "graph2": []}
@@ -171,6 +169,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Initialize the UI
         self.init_ui()
+        self.glued_data = []
 
     def init_ui(self):
         # Load the UI Page
@@ -305,6 +304,8 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.add_legend("graph1"))
         self.addLabelGraph2.returnPressed.connect(
             lambda: self.add_legend("graph2"))
+
+
 
     # ************************************** HELPER FUNCTIONS **************************************
 
@@ -1370,26 +1371,23 @@ class MainWindow(QtWidgets.QMainWindow):
         self.non_rect_window.show()
 
     # GLUE FUNCTIONS
-    def glue_graphs(self):
-        self.glue_window = ChannelViewer.ChannelViewer()
-        self.glue_window.show()
 
-    @staticmethod
-    def get_glue_data():
-        limits_glue1 = MainWindow().graph1_x_range
-        limits_glue2 = MainWindow().graph2_x_range
-        time1, data1 = MainWindow().signals["graph1"][0][0]
-        time2, data2 = MainWindow().signals["graph2"][0][0]
+
+    def get_glue_data(self):
+        limits_glue1 = self.graph1_x_range
+        limits_glue2 = self.graph2_x_range
+        time1, data1 = self.signals["graph1"][0][0]
+        time2, data2 = self.signals["graph2"][0][0]
         signal1 = {'x': time1, 'y': data1}
         signal2 = {'x': time2, 'y': data2}
+        glued_data = [limits_glue1, limits_glue2, signal1, signal2]
 
-        return limits_glue1, limits_glue2, signal1, signal2
+        return glued_data
 
-
-
+    def glue_graphs(self):
+        self.glue_window = ChannelViewer.ChannelViewer(self.get_glue_data())
+        self.glue_window.show()
 # ************************************** Main Function ************************************** #
-# def get_glued_data():
-#     return MainWindow().get_glue_data()
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
