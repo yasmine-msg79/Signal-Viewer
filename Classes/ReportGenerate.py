@@ -8,7 +8,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
-import ChannelViewer
+from Classes import ChannelViewer
 
 
 class SignalReportGenerator(QWidget):

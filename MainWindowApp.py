@@ -1,113 +1,106 @@
 # ************************************** Importing Libraries **************************************
 
-from PyQt6 import QtCore, QtWidgets
-from PyQt6.QtWidgets import QFileDialog, QMessageBox, QColorDialog, QListWidgetItem, QMessageBox, QDialogButtonBox
+from PyQt6 import QtCore
+from PyQt6.QtWidgets import QColorDialog, QListWidgetItem, QMessageBox, QApplication
 import wfdb
 import numpy as np
 import sys
-from PyQt6.QtGui import QShortcut, QKeySequence, QIcon
+from PyQt6.QtGui import QIcon
 from pyqtgraph.Qt import QtCore
 from PyQt6 import QtWidgets, uic
 import pyqtgraph as pg
 import csv
-from fpdf import FPDF
-from pyqtgraph.exporters import ImageExporter
 import os
 import qdarkstyle
+from pyqtgraph import PlotWidget
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtGui import QPixmap, QPainter
 from PyQt5.QtGui import QPainter
 import pyqtgraph.exporters
-from pyqtgraph import PlotWidget
 import random
 from PyQt6.QtCore import Qt
-# Added new libraries
 from PyQt6.QtWidgets import QInputDialog
 import psutil
 import requests
+
+from Classes import ChannelViewer, NonRectangular
 
 
 class RealTimeCpuPlot(QtWidgets.QWidget):
 
     def __init__(self, *args, **kwargs):
         super(RealTimeCpuPlot, self).__init__(*args, **kwargs)
-        
+
         # Set window title and size
         self.setWindowTitle("Real-Time CPU Usage")
         self.setGeometry(100, 100, 800, 600)
-        
+
         # Create layout and plot widget
         self.layout = QtWidgets.QVBoxLayout(self)
         self.plot_widget = pg.PlotWidget()
         self.layout.addWidget(self.plot_widget)
-        
+
         # Initialize plot data
         self.plot_data = self.plot_widget.plot()
-        
+
         # Set labels and legend for the plot
         self.plot_widget.setLabel('left', 'CPU Usage (%)')
         self.plot_widget.setLabel('bottom', 'Time (s)')
         self.plot_widget.addLegend()
         self.plot_data = self.plot_widget.plot(name="CPU Usage")
-        
+
         # Set up a timer to update the plot every second
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.update_plot)
         self.timer.start(1000)
-        
+
         # Initialize data list to store CPU usage values
         self.data = []
 
     def update_plot(self):
         # Get current CPU usage
         cpu_usage = psutil.cpu_percent()
-        
+
         # Append the CPU usage to the data list
         self.data.append(cpu_usage)
-        
+
         # Keep only the last 100 data points
         if len(self.data) > 100:
             self.data.pop(0)
-        
+
         # Update the plot with the new data
         self.plot_data.setData(self.data)
 
-
-
-
-
-from PyQt6.QtWidgets import QInputDialog, QMessageBox
-# from pyqtgraph import PolarPlotItem
 
 class RealTimeSatellitePlot(QtWidgets.QWidget):
 
     def __init__(self, *args, **kwargs):
         super(RealTimeSatellitePlot, self).__init__(*args, **kwargs)
-        
+
         # Set window title and size
         self.setWindowTitle("Real-Time Satellite Position")
         self.setGeometry(100, 100, 800, 600)
-        
+
         # Create layout and plot widget
         self.layout = QtWidgets.QVBoxLayout(self)
         self.plot_widget = pg.PlotWidget()
         self.layout.addWidget(self.plot_widget)
-        
+
         # Initialize plot data
         self.plot_data = self.plot_widget.plot()
-        
+
         # Set labels and legend for the plot
         self.plot_widget.setLabel('left', 'Position')
         self.plot_widget.setLabel('bottom', 'Time (s)')
         self.plot_widget.addLegend()
         self.plot_data = self.plot_widget.plot(name="Satellite Position")
-        
+
         # Set up a timer to update the plot every second
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.update_plot)
         self.timer.start(1000)
-        
+
         # Initialize data list to store satellite position values
         self.data = []
 
@@ -117,33 +110,30 @@ class RealTimeSatellitePlot(QtWidgets.QWidget):
             response = requests.get("https://api.wheretheiss.at/v1/satellites/25544")
             data = response.json()
             satellite_position = data['latitude']  # Example: using latitude as the position data
-            
+
             # Append the satellite position to the data list
             self.data.append(satellite_position)
-            
+
             # # Keep only the last 100 data points
             # if len(self.data) > 100:
             #     self.data.pop(0)
-            
+
             # Update the plot with the new data
             self.plot_data.setData(self.data)
         except Exception as e:
             print(f"Error fetching satellite data: {e}")
 
-from scipy import interpolate 
 
 class MainWindow(QtWidgets.QMainWindow):
-    
-# ************************************** Start  the Main  functions for our application   **************************************
 
-
+    # ************************************** Start  the Main  functions for our application   **************************************
 
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
 
-        
-        # Variabeles
-        
+        # Variables
+        self.glue_window = None
+        self.non_rect_window = None
         # Initialize signal data structures
         self.signals = {"graph1": [], "graph2": []}
         self.signals_lines = {"graph1": [], "graph2": []}
@@ -173,19 +163,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def init_ui(self):
         # Load the UI Page
-        self.ui = uic.loadUi('MainWindowApp.ui', self)
+        self.ui = uic.loadUi(r"MainWindowApp.ui", self)
         self.setWindowTitle("Multi-Channel Signal Viewer Team 1")
-            # self.setWindowIcon(QIcon("Icons/ECG.png"))
-
-
+        # self.setWindowIcon(QIcon("Icons/ECG.png"))
 
         # Access the PlotWidgets created in Qt Designer
         self.graph1 = self.findChild(PlotWidget, 'graph1')
         self.graph2 = self.findChild(PlotWidget, 'graph2')
-        
-
-   
-
 
         self.lookup = {"graph1": self.graph1, "graph2": self.graph2}
         self.current_graph = self.graph1  # default value
@@ -225,7 +209,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.zoomIn.clicked.connect(self.zoom_in)
         self.zoomOut.clicked.connect(self.zoom_out)
         self.glue_Button.clicked.connect(self.glue_graphs)
-        self.nonRectangular_Button.clicked.connect(self.Non_Rectangular_Function)
+        self.nonRectangular_Button.clicked.connect(self.non_rectangular_function)
         # Apply CSS to make fonts bold and enhance ComboBox design
         self.setStyleSheet("""
             QPushButton, QComboBox, QLabel {
@@ -264,9 +248,6 @@ class MainWindow(QtWidgets.QMainWindow):
             }
         """)
 
-
-        
-
         # Set speed slider properties
         self.speedSlider.setMinimum(0)
         self.speedSlider.setMaximum(100)
@@ -297,7 +278,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.addLabelGraph2.returnPressed.connect(self.change_channel_label)
         # self.signal_Link_Label.returnPressed.connect(self.signal_Link)
 
-
         # Connect hide list items to item checking/unchecking
         self.hideList1.itemChanged.connect(self.on_item_checked)
         self.hideList2.itemChanged.connect(self.on_item_checked)
@@ -314,12 +294,9 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.add_legend("graph1"))
         self.addLabelGraph2.returnPressed.connect(
             lambda: self.add_legend("graph2"))
-        
 
+    # ************************************** HELPER FUNCTIONS **************************************
 
-
-# ************************************** HELPER FUNCTIONS **************************************
-    
     # Recognization
     def get_graph_name(self):
         if self.current_graph == self.graph1:
@@ -328,7 +305,7 @@ class MainWindow(QtWidgets.QMainWindow):
             return "graph2"
         else:
             return self.sourceGraph
-    
+
     # Transfer Button 
     def button1_clicked(self):
         self.transfer_button1_state = True
@@ -342,43 +319,44 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             return self.channelsGraph2
 
-     # After Hide- Clear
-    
+    # After Hide- Clear
+
     def get_curr_graph_list(self):
         if self.get_graph_name() == "graph1":
             return self.fill_list1()
         else:
             return self.fill_list2()
-    
+
     def fill_list1(self):
         self.hideList1.clear()
-        for i in range(self.channelsGraph1.count()-1):
-            text = self.channelsGraph1.itemText(i+1)
+        for i in range(self.channelsGraph1.count() - 1):
+            text = self.channelsGraph1.itemText(i + 1)
             item = QListWidgetItem(text)
             item.setCheckState(Qt.CheckState.Checked)
             self.hideList1.addItem(item)
-   
+
     def fill_list2(self):
         self.hideList2.clear()
-        for i in range(self.channelsGraph2.count()-1):
-            text = self.channelsGraph2.itemText(i+1)
+        for i in range(self.channelsGraph2.count() - 1):
+            text = self.channelsGraph2.itemText(i + 1)
             item = QListWidgetItem(text)
             item.setCheckState(Qt.CheckState.Checked)
             self.hideList2.addItem(item)
+
     #  Hide - Clear
     def clear_curr_graph_list(self):
         if self.get_graph_name() == "graph1":
             return self.hideList1.clear()
         else:
             return self.hideList2.clear()
-    
+
     # Load
     def get_graph_paths(self):
         if self.get_graph_name() == "graph1":
             return self.graph1_signals_paths
         else:
             return self.graph2_signals_paths
-    
+
     #  Silly Function
     def set_icon(self, icon_path):
         # Load an icon
@@ -401,14 +379,14 @@ class MainWindow(QtWidgets.QMainWindow):
             if item.checkState() == Qt.CheckState.Checked:
                 checked_indexes.append(i)
         return checked_indexes
-    
+
     def on_item_unchecked(self):
         # Get the indexes of unchecked items in hideList1
         unchecked_indexes_list1 = self.get_unchecked_indexes(self.hideList1)
         for index in unchecked_indexes_list1:
             # Set the pen color of the corresponding signal line in graph1 to black
             self.signals_lines['graph1'][index].setPen((0, 0, 0))
-        
+
         # Get the indexes of unchecked items in hideList2
         unchecked_indexes_list2 = self.get_unchecked_indexes(self.hideList2)
         for index in unchecked_indexes_list2:
@@ -422,7 +400,7 @@ class MainWindow(QtWidgets.QMainWindow):
             # Set the pen color of the corresponding signal line in graph1 to its original color
             self.signals_lines['graph1'][index].setPen(
                 self.channels_color['graph1'][index])
-        
+
         # Get the indexes of checked items in hideList2
         checked_indexes_list2 = self.get_checked_indexes(self.hideList2)
         for index in checked_indexes_list2:
@@ -450,7 +428,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def handle_selected_channels_change(self, graph, i):
         self.channels_selected[graph] = i
 
-        if self.channels_selected[graph] == 0:  #NO Channels Selected
+        if self.channels_selected[graph] == 0:  # NO Channels Selected
             for j in range(len(self.signals_lines[graph])):
                 self.signals_info[graph][j][0] = True
                 self.sudden_appearing(graph, j)
@@ -468,7 +446,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     # sudden disappearing
                     self.sudden_disappearing(graph, j)
 
-    def initialize_data(self,):
+    def initialize_data(self, ):
         if (self.current_graph == self.graph1):
             self.signals["graph1"] = []
             self.signals_lines["graph1"] = []
@@ -479,7 +457,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.signals = {"graph1": [], "graph2": []}
             self.signals_lines = {"graph1": [], "graph2": []}
 
-    #Select Graph ComboBox
+    # Select Graph ComboBox
     def update_selected_graph(self, index):
         if index == 0:  # to graph1
             self.current_graph = self.graph1
@@ -501,7 +479,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.playButton.setText('Pause')
                 # self.set_icon("Icons/pause.svg")
 
-        elif index == 1: # Graph 2
+        elif index == 1:  # Graph 2
             self.current_graph = self.graph2  # to graph2
             self.speedSlider.setValue(self.data_index["graph2"])
             # graph2 is playing and graph1 is not
@@ -524,25 +502,25 @@ class MainWindow(QtWidgets.QMainWindow):
         elif index == 2:
             # Check if there are channels in both graphs
             if not self.signals["graph1"]:
-             self.show_error_message("Graph 1 is empty. Please upload channels first.")
-             self.graphSelection.setCurrentIndex(0)  # Reset to default value
-             return
+                self.show_error_message("Graph 1 is empty. Please upload channels first.")
+                self.graphSelection.setCurrentIndex(0)  # Reset to default value
+                return
             if not self.signals["graph2"]:
-             self.show_error_message("Graph 2 is empty. Please upload channels first.")
-             self.graphSelection.setCurrentIndex(0)  # Reset to default value
-             return
+                self.show_error_message("Graph 2 is empty. Please upload channels first.")
+                self.graphSelection.setCurrentIndex(0)  # Reset to default value
+                return
 
             self.current_graph = [self.graph1, self.graph2]
             self.data_index["graph2"] = 5
             self.data_index["graph1"] = 5
             self.speedSlider.setValue(self.data_index["graph1"])
             for graph in self.is_playing:
-             graph["is_playing"] = True
+                graph["is_playing"] = True
 
     def get_index(self):
         index = self.channelsGraph1.currentIndex()
         return index
-    
+
     # Colors Buttons
     def generate_random_color(self):
         while True:
@@ -558,14 +536,12 @@ class MainWindow(QtWidgets.QMainWindow):
             if brightness > 100:
                 return red, green, blue
 
-
-
-# ************************************** Plot Graphs **************************************   
+    # ************************************** Plot Graphs **************************************
 
     def browse(self):
         # Define the file filter for the file dialog
         file_filter = "Raw Data (*.csv *.txt *.xls *.hea *.dat *.rec)"
-        
+
         # Open a file dialog to select a signal file
         self.file_path, _ = QtWidgets.QFileDialog.getOpenFileName(
             None, 'Open Signal File', './', filter=file_filter)
@@ -577,7 +553,7 @@ class MainWindow(QtWidgets.QMainWindow):
             # Add a new channel to the channels combo box for graph1
             file_name = os.path.basename(self.file_path)
             self.channelsGraph1.addItem(
-            f"I-Channel {len(self.signals['graph1']) + 1} - {file_name}")
+                f"I-Channel {len(self.signals['graph1']) + 1} - {file_name}")
             # Set a fixed width for the combo box to prevent resizing
             self.channelsGraph1.setFixedWidth(200)
             # Fill the hide list for graph1
@@ -592,7 +568,7 @@ class MainWindow(QtWidgets.QMainWindow):
             # Add a new channel to the channels combo box for graph2
             file_name = os.path.basename(self.file_path)
             self.channelsGraph2.addItem(
-            f"II-Channel {len(self.signals['graph2']) + 1} - {file_name}")
+                f"II-Channel {len(self.signals['graph2']) + 1} - {file_name}")
             # Set a fixed width for the combo box to prevent resizing
             self.channelsGraph2.setFixedWidth(200)
             # Fill the hide list for graph2
@@ -606,13 +582,14 @@ class MainWindow(QtWidgets.QMainWindow):
             self.graph1_signals_paths.append(self.file_path)
             self.graph2_signals_paths.append(self.file_path)
             # Add a new channel to the channels combo box for both graphs
+            file_name = os.path.basename(self.file_path)
             self.channelsGraph1.addItem(
-            f"I-Channel {len(self.signals['graph1']) + 1} - {file_name}")
+                f"I-Channel {len(self.signals['graph1']) + 1} - {file_name}")
             self.channelsGraph1.setFixedWidth(200)
             self.fill_list1()
             file_name = os.path.basename(self.file_path)
             self.channelsGraph2.addItem(
-            f"II-Channel {len(self.signals['graph2']) + 1} - {file_name}")
+                f"II-Channel {len(self.signals['graph2']) + 1} - {file_name}")
             self.channelsGraph2.setFixedWidth(200)
             self.fill_list2()
             # Append a new signal info entry for both graphs
@@ -632,10 +609,10 @@ class MainWindow(QtWidgets.QMainWindow):
             self.signal_Link_Label.setText(link)
             return link
         return None
-    
+
     def connectFunction(self):
         # i want when i click on this button the new window apear and run RealTimeDataCPU_Usage python file
-        
+
         # Create a new window for the real-time CPU usage plot
         self.real_time_cpu_plot = RealTimeCpuPlot()
         self.real_time_cpu_plot.show()
@@ -643,7 +620,6 @@ class MainWindow(QtWidgets.QMainWindow):
         # Create a new window for thr real-time satellite position plot
         self.real_time_satellite_plot = RealTimeSatellitePlot()
         self.real_time_satellite_plot.show()
-
 
     def open_file(self, path: str):
         # Initialize time and data lists
@@ -719,7 +695,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.playButton.setText('Pause')
                 self.set_icon("Icons/pause.svg")
                 self.plot_unique_linked_signal()
-    
+
     def plot_graph_signal(self):
         if len(self.signals[self.get_graph_name()]) == 1:
             pen = pg.mkPen((self.generate_random_color()))
@@ -796,7 +772,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
                 end_ind = self.signals[graph_name][0][1]
                 self.signals[graph_name][-1] = [(self.time,
-                                                    self.data), end_ind]
+                                                 self.data), end_ind]
                 self.data_x = self.time[:end_ind]
                 self.data_y = self.data[:end_ind]
                 curve = self.current_graph[i].plot(
@@ -879,61 +855,41 @@ class MainWindow(QtWidgets.QMainWindow):
         for graph in self.is_playing:
             graph["is_playing"] = True
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# ************************************** Transfer signals **************************************
-
-
-
-
+    # ************************************** Transfer signals **************************************
 
     def transfer_signal(self):
-            if self.get_graph_name() == "graph1":  # from graph1 --> graph2
-                curr_channel_ind = self.channels_selected["graph1"]
-                self.transfer_data_between_globals(curr_channel_ind)
-            elif self.get_graph_name() == "graph2":
-                curr_channel_ind = self.channels_selected["graph2"]
-                self.transfer_data_between_globals(curr_channel_ind)
-            else:
-                self.show_error_message("Can't transfer, specify a graph!")
-    
+        if self.get_graph_name() == "graph1":  # from graph1 --> graph2
+            curr_channel_ind = self.channels_selected["graph1"]
+            self.transfer_data_between_globals(curr_channel_ind)
+        elif self.get_graph_name() == "graph2":
+            curr_channel_ind = self.channels_selected["graph2"]
+            self.transfer_data_between_globals(curr_channel_ind)
+        else:
+            self.show_error_message("Can't transfer, specify a graph!")
+
     def clear_graph1(self):
-            self.signals["graph1"].clear()
-            self.signals_lines["graph1"].clear()
-            self.signals_info["graph1"].clear()
-            self.channels_color["graph1"].clear()
-            self.graph1_signals_paths.clear()
-            self.graph1.clear()
-            self.channelsGraph1.clear()
-            self.channelsGraph1.addItem("All Channels")
-            self.hideList1.clear()
-    
+        self.signals["graph1"].clear()
+        self.signals_lines["graph1"].clear()
+        self.signals_info["graph1"].clear()
+        self.channels_color["graph1"].clear()
+        self.graph1_signals_paths.clear()
+        self.graph1.clear()
+        self.channelsGraph1.clear()
+        self.channelsGraph1.addItem("All Channels")
+        self.hideList1.clear()
+
     def clear_graph2(self):
-            self.signals["graph2"].clear()
-            self.signals_lines["graph2"].clear()
-            self.signals_info["graph2"].clear()
-            self.channels_color["graph2"].clear()
-            self.graph2_signals_paths.clear()
-            self.graph2.clear()
-            self.channelsGraph2.clear()
-            self.channelsGraph2.addItem("All Channels")
-            self.hideList2.clear()
-    
-    def transfer_data_between_globals(self, i): # i refer to Channel in the Specific Graph 
+        self.signals["graph2"].clear()
+        self.signals_lines["graph2"].clear()
+        self.signals_info["graph2"].clear()
+        self.channels_color["graph2"].clear()
+        self.graph2_signals_paths.clear()
+        self.graph2.clear()
+        self.channelsGraph2.clear()
+        self.channelsGraph2.addItem("All Channels")
+        self.hideList2.clear()
+
+    def transfer_data_between_globals(self, i):  # i refer to Channel in the Specific Graph
         if self.get_graph_name() == "graph1" and self.transfer_button1_state:
             source_graph = "graph1"
             drain_graph = "graph2"
@@ -965,11 +921,12 @@ class MainWindow(QtWidgets.QMainWindow):
             if source_graph == "graph1":
                 self.channels_color["graph2"] += self.channels_color["graph1"]
                 temp = [self.channelsGraph1.itemText(
-                    i) for i in range(len(self.graph1_signals_paths)+1)]
+                    i) for i in range(len(self.graph1_signals_paths) + 1)]
                 if len(self.graph2_signals_paths) == 0:
                     item_names = temp
                 else:
-                    item_names = [self.channelsGraph2.itemText(i) for i in range(len(self.graph2_signals_paths)+1)] + temp[1:]
+                    item_names = [self.channelsGraph2.itemText(i) for i in
+                                  range(len(self.graph2_signals_paths) + 1)] + temp[1:]
                 check_and_rename_channels("graph2", item_names)
                 self.graph2_signals_paths += self.graph1_signals_paths
                 self.clear_graph1()
@@ -983,12 +940,12 @@ class MainWindow(QtWidgets.QMainWindow):
             else:
                 self.channels_color["graph1"] += self.channels_color["graph2"]
                 temp = [self.channelsGraph2.itemText(
-                    i) for i in range(len(self.graph2_signals_paths)+1)]
+                    i) for i in range(len(self.graph2_signals_paths) + 1)]
                 if len(self.graph1_signals_paths) == 0:
                     item_names = temp
                 else:
                     item_names = [self.channelsGraph1.itemText(
-                        i) for i in range(len(self.graph1_signals_paths)+1)] + temp[1:]
+                        i) for i in range(len(self.graph1_signals_paths) + 1)] + temp[1:]
                 check_and_rename_channels("graph1", item_names)
                 self.graph1_signals_paths += self.graph2_signals_paths
                 self.clear_graph2()
@@ -1001,17 +958,17 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.update_after_transfer("graph1", i, item_names)
 
         else:
-            self.signals[drain_graph].append(self.signals[source_graph][i-1])
+            self.signals[drain_graph].append(self.signals[source_graph][i - 1])
             self.signals_info[drain_graph].append(
-                self.signals_info[source_graph][i-1])
+                self.signals_info[source_graph][i - 1])
             self.signals_lines[drain_graph].append(
-                self.signals_lines[source_graph][i-1])
+                self.signals_lines[source_graph][i - 1])
             self.channels_color[drain_graph].append(
-                self.channels_color[source_graph][i-1])
+                self.channels_color[source_graph][i - 1])
 
             if source_graph == "graph1":
                 self.graph2_signals_paths.append(
-                    self.graph1_signals_paths[i-1])
+                    self.graph1_signals_paths[i - 1])
                 item_name = self.channelsGraph1.itemText(i)
                 self.channelsGraph1.removeItem(i)
                 if len(self.signals["graph1"]) == 1:
@@ -1021,7 +978,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.update_selected_graph(1)
                 else:
                     self.is_playing[0]["is_playing"] = True
-                    self.sudden_disappearing("graph1", i-1)
+                    self.sudden_disappearing("graph1", i - 1)
                     self.delete_selected_ch()
                     self.graphSelection.setCurrentIndex(1)
                     self.update_selected_graph(1)
@@ -1030,7 +987,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
             else:
                 self.graph1_signals_paths.append(
-                    self.graph2_signals_paths[i-1])
+                    self.graph2_signals_paths[i - 1])
                 item_name = self.channelsGraph2.itemText(i)
                 self.channelsGraph2.removeItem(i)
                 if len(self.signals["graph2"]) == 1:
@@ -1040,7 +997,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.update_selected_graph(0)
                 else:
                     self.is_playing[1]["is_playing"] = True
-                    self.sudden_disappearing("graph2", i-1)
+                    self.sudden_disappearing("graph2", i - 1)
                     self.delete_selected_ch()
                     self.graphSelection.setCurrentIndex(0)
                     self.update_selected_graph(0)
@@ -1053,7 +1010,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fill_list2()
         self.horizontalLayout_9.update()
         self.horizontalLayout_6.update()
-    
+
     def update_after_transfer(self, curr_graph, i, item_names):
         if i == 0:
             self.get_curr_graph_channels().clear()
@@ -1070,7 +1027,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 curve = self.lookup[curr_graph].plot(X, Y, pen=pen)
                 self.signals_lines[curr_graph][i] = curve
                 self.get_curr_graph_channels().addItem(
-                    item_names[i+1])  # combobox refill
+                    item_names[i + 1])  # combobox refill
                 self.get_curr_graph_list()
             if not self.timer.isActive():
                 self.timer.start(50)
@@ -1095,14 +1052,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     if not self.timer.isActive():
                         self.timer.start(50)
 
+    # ************************************** Controllers and Manipulation **************************************
 
-
-
-
-# ************************************** Controllers and Manipulation **************************************
-
-
-    def delete_selected_ch(self): # i will delete channel
+    def delete_selected_ch(self):  # i will delete channel
         graph_name = self.get_graph_name()
         if graph_name not in ["graph1", "graph2"]:
             self.show_error_message('Please select a graph first.')
@@ -1193,13 +1145,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.assign_colors(self.sourceGraph)
             self.sourceGraph = "both"  # so that the controls apply to both graphs
 
-
     # This function will be called when the user clicks the clear button to hide graph signals only,
     # and convert the hideButton text to Show, and then show them again when clicked on the show button and so on.
 
     def hide_Show_graph(self):
         graph_name = self.get_graph_name()
-        
+
         if graph_name == "both":
             graphs = ["graph1", "graph2"]
         else:
@@ -1216,111 +1167,97 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.signals_lines[graph][i].setVisible(True)
             self.hideButton.setText("Hide")
 
-
     # Including X and Y Ranges for Glue
 
-    def toggle_play_pause(self): # Play and Pause Graphs
-            
-            if self.current_graph == self.graph1:
-                if self.is_playing[0]["is_playing"]: # Check if graph 1 is playing 
-                    self.is_playing[0]["is_playing"] = False
+    def toggle_play_pause(self):  # Play and Pause Graphs
+
+        if self.current_graph == self.graph1:
+            if self.is_playing[0]["is_playing"]:  # Check if graph 1 is playing
+                self.is_playing[0]["is_playing"] = False
+                self.playButton.setText('Play')
+                self.set_icon("Icons/play-svgrepo-com.svg")
+
+                ######----->Yasmine  Get current view range for X and Y axes
+                self.graph1_x_range = self.graph1.viewRange()[0]
+                self.graph1_y_range = self.graph1.viewRange()[1]
+                print(f"X-axis view range for graph1: Start = {self.graph1_x_range[0]}, End = {self.graph1_x_range[1]}")
+                print(f"Y-axis view range for graph1: Start = {self.graph1_y_range[0]}, End = {self.graph1_y_range[1]}")
+
+                last_data = self.get_last_data_point("graph1")[0]
+                self.graph1.setLimits(xMin=0)
+                self.graph1.setLimits(yMin=-0.5, yMax=1)
+            else:  # Check if graph 1 is not playing
+                self.is_playing[0]["is_playing"] = True
+                self.playButton.setText('Pause')
+                self.set_icon("Icons/pause.svg")
+
+        elif self.current_graph == self.graph2:
+            if self.is_playing[1]["is_playing"]:
+                self.is_playing[1]["is_playing"] = False
+                self.playButton.setText('Play')
+                self.set_icon("Icons/play-svgrepo-com.svg")
+
+                ######----->Yasmine  Get current view range for X and Y axes
+                self.graph2_x_range = self.graph2.viewRange()[0]
+                self.graph2_y_range = self.graph2.viewRange()[1]
+                print(f"X-axis view range for graph2: Start = {self.graph2_x_range[0]}, End = {self.graph2_x_range[1]}")
+                print(f"Y-axis view range for graph2: Start = {self.graph2_y_range[0]}, End = {self.graph2_y_range[1]}")
+
+                last_data = self.get_last_data_point("graph2")[0]
+                self.graph2.setLimits(xMin=0, xMax=last_data)
+                self.graph2.setLimits(yMin=-0.5, yMax=1)
+
+            else:
+                self.is_playing[1]["is_playing"] = True
+                self.playButton.setText('Pause')
+                self.set_icon("Icons/pause.svg")
+                # Allow free panning when playing
+                # self.set_panning_limits(self.graph2, False)
+
+        else:  # link mode
+            last_data = min(self.get_last_data_point("graph1")[0], self.get_last_data_point("graph2")[0])
+            for graph in self.is_playing:
+                if graph["is_playing"]:
+                    graph["is_playing"] = False
                     self.playButton.setText('Play')
                     self.set_icon("Icons/play-svgrepo-com.svg")
-                    
+
                     ######----->Yasmine  Get current view range for X and Y axes
                     self.graph1_x_range = self.graph1.viewRange()[0]
                     self.graph1_y_range = self.graph1.viewRange()[1]
-                    print(f"X-axis view range for graph1: Start = {self.graph1_x_range[0]}, End = {self.graph1_x_range[1]}")
-                    print(f"Y-axis view range for graph1: Start = {self.graph1_y_range[0]}, End = {self.graph1_y_range[1]}")
-                    
-                    last_data = self.get_last_data_point("graph1")[0]
-                    self.graph1.setLimits(xMin=0)
-                    self.graph1.setLimits(yMin=-0.5, yMax=1)
-                else:                                 # Check if graph 1 is not playing
-                    self.is_playing[0]["is_playing"] = True
-                    self.playButton.setText('Pause')
-                    self.set_icon("Icons/pause.svg")
-
-            elif self.current_graph == self.graph2:
-                if self.is_playing[1]["is_playing"]:
-                    self.is_playing[1]["is_playing"] = False
-                    self.playButton.setText('Play')
-                    self.set_icon("Icons/play-svgrepo-com.svg")
-                    
-                    ######----->Yasmine  Get current view range for X and Y axes
                     self.graph2_x_range = self.graph2.viewRange()[0]
                     self.graph2_y_range = self.graph2.viewRange()[1]
-                    print(f"X-axis view range for graph2: Start = {self.graph2_x_range[0]}, End = {self.graph2_x_range[1]}")
-                    print(f"Y-axis view range for graph2: Start = {self.graph2_y_range[0]}, End = {self.graph2_y_range[1]}")
-                    
-                    last_data = self.get_last_data_point("graph2")[0]
-                    self.graph2.setLimits(xMin=0, xMax=last_data)
-                    self.graph2.setLimits(yMin=-0.5, yMax=1)
+                    print(
+                        f"X-axis view range for graph1: Start = {self.graph1_x_range[0]}, End = {self.graph1_x_range[1]}")
+                    print(
+                        f"Y-axis view range for graph1: Start = {self.graph1_y_range[0]}, End = {self.graph1_y_range[1]}")
+                    print(
+                        f"X-axis view range for graph2: Start = {self.graph2_x_range[0]}, End = {self.graph2_x_range[1]}")
+                    print(
+                        f"Y-axis view range for graph2: Start = {self.graph2_y_range[0]}, End = {self.graph2_y_range[1]}")
 
+                    # Restrict panning beyond the last data point when pausing
+                    # self.set_panning_limits(self.current_graph, True)
+                    self.graph1.setLimits(xMin=0, xMax=last_data)
+                    self.graph2.setLimits(xMin=0, xMax=last_data)
+                    self.graph1.setLimits(yMin=-0.5, yMax=1)
+                    self.graph2.setLimits(yMin=-0.5, yMax=1)
                 else:
-                    self.is_playing[1]["is_playing"] = True
+                    graph["is_playing"] = True
                     self.playButton.setText('Pause')
                     self.set_icon("Icons/pause.svg")
                     # Allow free panning when playing
-                    # self.set_panning_limits(self.graph2, False)
+                    # self.set_panning_limits(self.current_graph, False)
 
-            else:  # link mode
-                last_data = min(self.get_last_data_point("graph1")[0], self.get_last_data_point("graph2")[0])
-                for graph in self.is_playing:
-                    if graph["is_playing"]:
-                        graph["is_playing"] = False
-                        self.playButton.setText('Play')
-                        self.set_icon("Icons/play-svgrepo-com.svg")
-                        
-                        ######----->Yasmine  Get current view range for X and Y axes
-                        self.graph1_x_range = self.graph1.viewRange()[0]
-                        self.graph1_y_range = self.graph1.viewRange()[1]
-                        self.graph2_x_range = self.graph2.viewRange()[0]
-                        self.graph2_y_range = self.graph2.viewRange()[1]
-                        print(f"X-axis view range for graph1: Start = {self.graph1_x_range[0]}, End = {self.graph1_x_range[1]}")
-                        print(f"Y-axis view range for graph1: Start = {self.graph1_y_range[0]}, End = {self.graph1_y_range[1]}")
-                        print(f"X-axis view range for graph2: Start = {self.graph2_x_range[0]}, End = {self.graph2_x_range[1]}")
-                        print(f"Y-axis view range for graph2: Start = {self.graph2_y_range[0]}, End = {self.graph2_y_range[1]}")
-
-                        
-                        # Restrict panning beyond the last data point when pausing
-                        # self.set_panning_limits(self.current_graph, True)
-                        self.graph1.setLimits(xMin=0, xMax=last_data)
-                        self.graph2.setLimits(xMin=0, xMax=last_data)
-                        self.graph1.setLimits(yMin=-0.5, yMax=1)
-                        self.graph2.setLimits(yMin=-0.5, yMax=1)
-                    else:
-                        graph["is_playing"] = True
-                        self.playButton.setText('Pause')
-                        self.set_icon("Icons/pause.svg")
-                        # Allow free panning when playing
-                        # self.set_panning_limits(self.current_graph, False)
-    
     def get_last_data_point(self, graph):
         if graph in self.signals and self.signals[graph]:
-            last_signal = self.signals[graph][-1] # - VE Index
+            last_signal = self.signals[graph][-1]  # - VE Index
             (time, data), end_ind = last_signal
             if end_ind < len(time) and end_ind < len(data):
                 return (time[end_ind], data[end_ind])
         return None
 
-
-
-
-
-
-
-
-
-
-
-
-
     # ************************************** Colors, Labels, and Legends **************************************
-
-
-
-
 
     def change_channel_label(self):
         graph_name = self.get_graph_name()
@@ -1414,41 +1351,28 @@ class MainWindow(QtWidgets.QMainWindow):
                     channels_color[selected_channel_index - 1] = new_color
                     signals_lines[selected_channel_index - 1].setPen(new_color)
 
-
-
-
-
-
-
-
-
     # ************************************** NonRectangular , Glue  ************************************** #
 
+    # non_rectangular_function
+    def non_rectangular_function(self):
+        self.non_rect_window = NonRectangular.NonRectangularPlot()
+        self.non_rect_window.show()
 
-    # Non_Rectangular_Function 
-    def Non_Rectangular_Function(self):
-         pass 
-
-
-
-
-
-
-
-  
-    # GLUIE FUNCTION                        ###################### لسه مخلصتش ####################
-
+    # GLUE FUNCTIONS
     def glue_graphs(self):
-            pass
-        
- 
+        self.glue_window = ChannelViewer.ChannelViewer()
+        self.glue_window.show()
 
+    @staticmethod
+    def get_glue_data():
+        limits_glue1 = MainWindow().graph1_x_range
+        limits_glue2 = MainWindow().graph2_x_range
+        time1, data1 = MainWindow().signals["graph1"][0][0]
+        time2, data2 = MainWindow().signals["graph2"][0][0]
+        signal1 = {'x': time1, 'y': data1}
+        signal2 = {'x': time2, 'y': data2}
+        return limits_glue1, limits_glue2, signal1, signal2
 
-
-
-
-
-  
 
 # ************************************** Main Function ************************************** #
 
@@ -1462,4 +1386,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
