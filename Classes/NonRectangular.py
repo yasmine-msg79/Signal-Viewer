@@ -97,11 +97,10 @@ class NonRectangularPlot(QDialog):
             self.timer.start(1)
 
     def upload_file(self):
-        options = QFileDialog.Options()
+        # options = QFileDialog.options()
         file_name, _ = QFileDialog.getOpenFileName(self, "Select File", "",
                                                    "CSV Files (*.csv);;Excel Files (*.xls *.xlsx);;Text Files ("
-                                                   "*.txt);;All Files (*)",
-                                                   options=options)
+                                                   "*.txt);;All Files (*)")
         if file_name:
             self.signal = extract_signal_data(file_name)
             # if signal:

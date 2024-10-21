@@ -39,20 +39,20 @@ def get_signal_stat():
 class ChannelViewer(QWidget):
     def __init__(self, *args, **kwargs):
         super(ChannelViewer, self).__init__(*args, **kwargs)
-        self.limit_graph2 = None
-        self.limit_graph1 = None
-        self.signal2 = None
-        self.signal1 = None
+        # self.limit_graph2 = None
+        # self.limit_graph1 = None
+        # self.signal2 = None
+        # self.signal1 = None
         self.report_window = None
         uic.loadUi(r"UI\channel_viewer.ui", self)
 
-        self.graph1 = pg.PlotWidget(self)
+        limit_1, limit_2, signal1, signal2 = MainWindowApp.MainWindow.get_glue_data()
         self.graph1.setBackground('black')
-        self.graph1.signal = self.signal1
+        self.graph1.signal = signal1
 
         self.graph2 = pg.PlotWidget(self)
         self.graph2.setBackground('black')
-        self.graph2.signal = self.signal2
+        self.graph2.signal = signal2
 
         self.Glue_Editor = pg.PlotWidget(self)
         self.Glue_Editor.setBackground('black')
@@ -114,8 +114,6 @@ class ChannelViewer(QWidget):
         self.gap_slider.valueChanged.connect(self.update_gap)
 
     # Fetch and update glue data.
-    def get_glued_data(self):
-        self.limit_graph1, self.limit_graph2, self.signal1, self.signal2 = MainWindowApp.MainWindow.get_glue_data()
 
     def update_gap(self, value):
         self.Gap_value = value
@@ -321,6 +319,7 @@ class ChannelViewer(QWidget):
     #         display_rect_signal(signal, self.graph1)
     #     else:
     #         display_rect_signal(signal, self.graph2)
+
 
 #     def extract_signal_data(self, source):
 #         try:

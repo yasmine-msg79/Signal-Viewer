@@ -27,6 +27,8 @@ import requests
 from Classes import ChannelViewer, NonRectangular
 
 
+
+
 class RealTimeCpuPlot(QtWidgets.QWidget):
 
     def __init__(self, *args, **kwargs):
@@ -132,8 +134,17 @@ class MainWindow(QtWidgets.QMainWindow):
         super(MainWindow, self).__init__(*args, **kwargs)
 
         # Variables
+        self.signal1 = None
+        self.signal2 = None
+        self.limits_glue2 = None
+        self.limits_glue1 = None
+        self.graph1_x_range = None
+        self.graph2_y_range = None
+        self.graph1_y_range = None
         self.glue_window = None
         self.non_rect_window = None
+        self.graph1_1_range = None
+        self.graph2_x_range = None
         # Initialize signal data structures
         self.signals = {"graph1": [], "graph2": []}
         self.signals_lines = {"graph1": [], "graph2": []}
@@ -1371,10 +1382,14 @@ class MainWindow(QtWidgets.QMainWindow):
         time2, data2 = MainWindow().signals["graph2"][0][0]
         signal1 = {'x': time1, 'y': data1}
         signal2 = {'x': time2, 'y': data2}
+
         return limits_glue1, limits_glue2, signal1, signal2
 
 
+
 # ************************************** Main Function ************************************** #
+# def get_glued_data():
+#     return MainWindow().get_glue_data()
 
 def main():
     app = QtWidgets.QApplication(sys.argv)
