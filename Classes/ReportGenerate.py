@@ -13,7 +13,7 @@ from Classes import ChannelViewer
 
 
 class SignalReportGenerator(QWidget):
-    def __init__(self, snapshots_list, *args, **kwargs):
+    def __init__(self, snapshots_list,*args, **kwargs):
         super(SignalReportGenerator, self).__init__(*args, **kwargs)
         self.timer = None
         self.signal_data = None
@@ -160,6 +160,8 @@ class SignalReportGenerator(QWidget):
         # Finalize the PDF document
         pdf.build(elements)
         QMessageBox.information(self, "Success!", "Your report has been successfully created and saved!")
+
+
 
 
 if __name__ == '__main__':
