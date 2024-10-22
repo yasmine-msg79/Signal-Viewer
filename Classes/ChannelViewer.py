@@ -13,16 +13,7 @@ import MainWindowApp
 from Classes import ReportGenerate
 
 
-def plot_rect(signal, rect_plot):
-    rect_plot.clear()
-    rect_plot.plot(signal['x'], signal['y'], pen='b')
-    rect_plot.setTitle(f"{rect_plot}")
-    rect_plot.setLabel('left', 'Amplitude')
-    rect_plot.setLabel('bottom', 'Time')
-    rect_plot.showGrid(x=True, y=True)
-    rect_plot.setLimits(xMin=min(signal['x']), xMax=max(signal['x']))
-    rect_plot.setLimits(yMin=min(signal['y']), yMax=max(signal['y']))
-    rect_plot.signal = signal
+
 
 
 def display_rect_signal(signal, viewer):
@@ -48,22 +39,22 @@ class ChannelViewer(QDialog):
         # self.glue_data = MainWindowApp.get_glued_data()
         # self.main_window = main_instance
         uic.loadUi(r"UI\channel_viewer.ui", self)
-        signal1 = None
-        signal2 = None
+        # signal1 = None
+        # signal2 = None
 
         # limit_1, limit_2, signal1, signal2 = MainWindowApp.get_glued_data()
-        limit_1 = glue_items[0]
-        limit_2 = glue_items[1]
-        signal1 = glue_items[2]
-        signal2 = glue_items[3]
+        # self.limit_1 = glue_items[0]
+        # self.limit_2 = glue_items[1]
+        self.signal1 = glue_items[2]
+        self.signal2 = glue_items[3]
 
         self.graph1 = pg.PlotWidget(self)
         self.graph1.setBackground('black')
-        self.graph1.signal = signal1
+        self.graph1.signal = self.signal1
 
         self.graph2 = pg.PlotWidget(self)
         self.graph2.setBackground('black')
-        self.graph2.signal = signal2
+        self.graph2.signal = self.signal2
 
         self.Glue_Editor = pg.PlotWidget(self)
         self.Glue_Editor.setBackground('black')
@@ -104,9 +95,9 @@ class ChannelViewer(QDialog):
         # sample signals to test ui
         # self.signal1 = generate_signal(50)
         # self.signal2 = generate_signal(50)
-        if signal1 and signal2:
-            display_rect_signal(signal1, self.graph1)
-            display_rect_signal(signal2, self.graph2)
+        if self.signal1 and self.signal2:
+            self.plot_rect(self.signal1, self.graph1)
+            self.plot_rect(self.signal2, self.graph2)
 
         # display_rect_signal(self.signal1, self.graph1)
         # display_rect_signal(self.signal2, self.graph2)
@@ -126,7 +117,15 @@ class ChannelViewer(QDialog):
         self.gap_slider.valueChanged.connect(self.update_gap)
 
     # Fetch and update glue data.
+    def plot_rect(self, signal, rect_plot):
+        rect_plot.clear()
+        rect_plot.plot(signal['x'], signal['y'], pen='b')
+        rect_plot.setTitle(f"{rect_plot}")
+        rect_plot.setLabel('left', 'Amplitude')
+        rect_plot.setLabel('bottom', 'Time')
+        rect_plot.showGrid(x=True, y=True)
 
+        rect_plot.signal = signal
     def update_gap(self, value):
         self.Gap_value = value
 
@@ -148,9 +147,9 @@ class ChannelViewer(QDialog):
         self.clear_snapshots()
 
     def glue_action(self):
-        signal1 = self.graph1.signal
-        signal2 = self.graph2.signal
-        self.select_segments(signal1, signal2)
+        # signal1 = self.graph1.signal
+        # signal2 = self.graph2.signal
+        self.select_segments(self.signal1, self.signal2)
         self.glue_segments()
         self.graph1.removeItem(self.start_line1)
         self.graph1.removeItem(self.end_line1)
@@ -195,13 +194,13 @@ class ChannelViewer(QDialog):
 
     def add_segment_selection_lines(self):
         if self.start_line1 is None and self.end_line1 is None and self.start_line2 is None and self.end_line2 is None:
-            self.start_line1 = pg.InfiniteLine(pos=0.1 * len(self.graph1.signal['x']), angle=90, movable=True,
+            self.start_line1 = pg.InfiniteLine(pos=10, angle=90, movable=True,
                                                pen=pg.mkPen(color='r', width=2))
-            self.end_line1 = pg.InfiniteLine(pos=0.2 * len(self.graph1.signal['x']), angle=90, movable=True,
+            self.end_line1 = pg.InfiniteLine(pos=50, angle=90, movable=True,
                                              pen=pg.mkPen(color='g', width=2))
-            self.start_line2 = pg.InfiniteLine(pos=0.1 * len(self.graph1.signal['x']), angle=90, movable=True,
+            self.start_line2 = pg.InfiniteLine(pos=10, angle=90, movable=True,
                                                pen=pg.mkPen(color='r', width=2))
-            self.end_line2 = pg.InfiniteLine(pos=0.2 * len(self.graph1.signal['x']), angle=90, movable=True,
+            self.end_line2 = pg.InfiniteLine(pos=50, angle=90, movable=True,
                                              pen=pg.mkPen(color='g', width=2))
 
         self.graph1.addItem(self.start_line1)
@@ -255,7 +254,7 @@ class ChannelViewer(QDialog):
             'y': glued_y
         }
         # self.Glue_Editor.plot(glued_x, glued_y, pen='g')
-        plot_rect(signal_glued, self.Glue_Editor)
+        self.plot_rect(signal_glued, self.Glue_Editor)
         self.calc_statistics(signal_glued)
 
     # Report Related functions: statistics, snapshots and report window launch.
@@ -283,9 +282,9 @@ class ChannelViewer(QDialog):
         print(f"Snapshot saved: {snapshot_name}")
         print(f"snapshots:{self.snapshots}")
 
-    @staticmethod
-    def get_snapshots():
-        return ChannelViewer().snapshots
+    # @staticmethod
+    # def get_snapshots():
+    #     return ChannelViewer().snapshots
 
     def clear_snapshots(self):
         self.snapshots.clear()
@@ -423,14 +422,14 @@ class ChannelViewer(QDialog):
 #     return jsonify({"status": "Signal generation stopped."})
 #
 #
-# def generate_signal(length):
-#     x = np.linspace(0, 100, length)
-#     y = np.sin(x) + 0.5 * np.random.randn(length)
-#     return {'x': x, 'y': y}
+def generate_signal(length):
+    x = np.linspace(0, 100, length)
+    y = np.sin(x) + 0.5 * np.random.randn(length)
+    return {'x': x, 'y': y}
 
 if __name__ == "__main__":
     app = QApplication([])
-    window = ChannelViewer()
+    window = ChannelViewer(glue_items=(10,10,[1,2,3,4,5],[1,2,3,4,5]))
     window.setWindowTitle("Glue Editor")
     window.show()
     sys.exit(app.exec())
