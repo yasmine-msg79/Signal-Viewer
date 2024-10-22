@@ -34,8 +34,8 @@ def display_rect_signal(signal, viewer):
     viewer.signal = signal
 
 
-# def get_signal_stat():
-#     return ChannelViewer().glued_statistics
+def get_signal_stat():
+    return ChannelViewer(MainWindowApp.get_glued_data()).pass_data()
 
 
 class ChannelViewer(QDialog):
@@ -45,15 +45,18 @@ class ChannelViewer(QDialog):
         # self.limit_graph1 = None
         # self.signal2 = None
         # self.signal1 = None
-        self.glue_data = glue_items
-        self.report_window = None
-        self.start_line1 = None
-        self.end_line1 = None
-        self.start_line2 = None
-        self.end_line2 = None
+        # self.glue_data = MainWindowApp.get_glued_data()
+        # self.main_window = main_instance
         uic.loadUi(r"UI\channel_viewer.ui", self)
+        signal1 = None
+        signal2 = None
 
-        limit_1, limit_2, signal1, signal2 = self.glue_data
+        # limit_1, limit_2, signal1, signal2 = MainWindowApp.get_glued_data()
+        limit_1 = glue_items[0]
+        limit_2 = glue_items[1]
+        signal1 = glue_items[2]
+        signal2 = glue_items[3]
+
         self.graph1 = pg.PlotWidget(self)
         self.graph1.setBackground('black')
         self.graph1.signal = signal1
@@ -90,14 +93,20 @@ class ChannelViewer(QDialog):
         self.glued_statistics = []
         self.snapshots = []
         self.selected_segments = []
+        self.report_window = None
+        self.start_line1 = None
+        self.end_line1 = None
+        self.start_line2 = None
+        self.end_line2 = None
         self.graph1.setObjectName("graph1")
         self.graph2.setObjectName("graph2")
 
         # sample signals to test ui
         # self.signal1 = generate_signal(50)
         # self.signal2 = generate_signal(50)
-        plot_rect(self.graph1.signal, self.graph1)
-        plot_rect(self.graph2.signal, self.graph2)
+        if signal1 and signal2:
+            display_rect_signal(signal1, self.graph1)
+            display_rect_signal(signal2, self.graph2)
 
         # display_rect_signal(self.signal1, self.graph1)
         # display_rect_signal(self.signal2, self.graph2)
@@ -154,12 +163,10 @@ class ChannelViewer(QDialog):
 
     def toggle_glue_editor(self):
         if self.glue_button.isChecked():
-            self.start_line1 = None
-            self.end_line1 = None
-            self.start_line2 = None
-            self.end_line2 = None
+            print(self.start_line2)
             self.glue_editor.show()
             self.add_segment_selection_lines()
+            print(self.end_line2)
             self.clear_button.show()
             self.snapshot_button.show()
             self.action_glue_button.show()
@@ -179,10 +186,10 @@ class ChannelViewer(QDialog):
             self.graph1.removeItem(self.end_line1)
             self.graph2.removeItem(self.start_line2)
             self.graph2.removeItem(self.end_line2)
-            self.start_line1 = None
-            self.end_line1 = None
-            self.start_line2 = None
-            self.end_line2 = None
+            # self.start_line1 = None
+            # self.end_line1 = None
+            # self.start_line2 = None
+            # self.end_line2 = None
 
     # Glue Logic Implementation.
 
@@ -195,12 +202,12 @@ class ChannelViewer(QDialog):
             self.start_line2 = pg.InfiniteLine(pos=0.1 * len(self.graph1.signal['x']), angle=90, movable=True,
                                                pen=pg.mkPen(color='r', width=2))
             self.end_line2 = pg.InfiniteLine(pos=0.2 * len(self.graph1.signal['x']), angle=90, movable=True,
-                                             pen=pg.mkPen(color='g', width=2, style='-'))
+                                             pen=pg.mkPen(color='g', width=2))
 
-            self.graph1.addItem(self.start_line1)
-            self.graph1.addItem(self.end_line1)
-            self.graph2.addItem(self.start_line2)
-            self.graph2.addItem(self.end_line2)
+        self.graph1.addItem(self.start_line1)
+        self.graph1.addItem(self.end_line1)
+        self.graph2.addItem(self.start_line2)
+        self.graph2.addItem(self.end_line2)
 
     def select_segments(self, signal1, signal2):
         start_index1 = np.searchsorted(signal1['x'], self.start_line1.value())
@@ -260,6 +267,8 @@ class ChannelViewer(QDialog):
         min_val = np.min(signal['y'])
         duration = signal['x'][-1] - signal['x'][0]
         self.glued_statistics = {"Mean": mean_val, "Std": std_val, "Max": max_val, "Min": min_val, "Duration": duration}
+
+    def pass_data(self):
         return self.glued_statistics
 
     def take_snapshot(self):

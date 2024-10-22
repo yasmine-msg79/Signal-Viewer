@@ -27,6 +27,10 @@ import requests
 from Classes import ChannelViewer, NonRectangular
 
 
+def get_glued_data():
+    return MainWindow().get_glued_info()
+
+
 class RealTimeCpuPlot(QtWidgets.QWidget):
 
     def __init__(self, *args, **kwargs):
@@ -132,6 +136,7 @@ class MainWindow(QtWidgets.QMainWindow):
         super(MainWindow, self).__init__(*args, **kwargs)
 
         # Variables
+        self.glued_data = ()
         self.signal1 = None
         self.signal2 = None
         self.limits_glue2 = None
@@ -169,7 +174,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Initialize the UI
         self.init_ui()
-        self.glued_data = []
+        # self.glued_data = []
 
     def init_ui(self):
         # Load the UI Page
@@ -218,7 +223,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.rewindButton.clicked.connect(self.rewind_graph)
         self.zoomIn.clicked.connect(self.zoom_in)
         self.zoomOut.clicked.connect(self.zoom_out)
-        self.glue_Button.clicked.connect(self.glue_graphs)
+        self.glue_Button.clicked.connect(self.open_glue)
         self.nonRectangular_Button.clicked.connect(self.non_rectangular_function)
         # Apply CSS to make fonts bold and enhance ComboBox design
         self.setStyleSheet("""
@@ -304,8 +309,6 @@ class MainWindow(QtWidgets.QMainWindow):
             lambda: self.add_legend("graph1"))
         self.addLabelGraph2.returnPressed.connect(
             lambda: self.add_legend("graph2"))
-
-
 
     # ************************************** HELPER FUNCTIONS **************************************
 
@@ -1190,10 +1193,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.set_icon("Icons/play-svgrepo-com.svg")
 
                 ######----->Yasmine  Get current view range for X and Y axes
-                self.graph1_x_range = self.graph1.viewRange()[0]
-                self.graph1_y_range = self.graph1.viewRange()[1]
-                print(f"X-axis view range for graph1: Start = {self.graph1_x_range[0]}, End = {self.graph1_x_range[1]}")
-                print(f"Y-axis view range for graph1: Start = {self.graph1_y_range[0]}, End = {self.graph1_y_range[1]}")
+                # self.graph1_x_range = self.graph1.viewRange()[0]
+                # self.graph1_y_range = self.graph1.viewRange()[1]
+                # print(f"X-axis view range for graph1: Start = {self.graph1_x_range[0]}, End = {self.graph1_x_range[1]}")
+                # print(f"Y-axis view range for graph1: Start = {self.graph1_y_range[0]}, End = {self.graph1_y_range[1]}")
 
                 last_data = self.get_last_data_point("graph1")[0]
                 self.graph1.setLimits(xMin=0)
@@ -1202,6 +1205,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.is_playing[0]["is_playing"] = True
                 self.playButton.setText('Pause')
                 self.set_icon("Icons/pause.svg")
+                self.graph1_x_range = self.graph1.viewRange()[0]
+                self.graph1_y_range = self.graph1.viewRange()[1]
+                print(f"X-axis view range for graph1: Start = {self.graph1_x_range[0]}, End = {self.graph1_x_range[1]}")
+                print(f"Y-axis view range for graph1: Start = {self.graph1_y_range[0]}, End = {self.graph1_y_range[1]}")
+
 
         elif self.current_graph == self.graph2:
             if self.is_playing[1]["is_playing"]:
@@ -1210,10 +1218,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.set_icon("Icons/play-svgrepo-com.svg")
 
                 ######----->Yasmine  Get current view range for X and Y axes
-                self.graph2_x_range = self.graph2.viewRange()[0]
-                self.graph2_y_range = self.graph2.viewRange()[1]
-                print(f"X-axis view range for graph2: Start = {self.graph2_x_range[0]}, End = {self.graph2_x_range[1]}")
-                print(f"Y-axis view range for graph2: Start = {self.graph2_y_range[0]}, End = {self.graph2_y_range[1]}")
+                # self.graph2_x_range = self.graph2.viewRange()[0]
+                # self.graph2_y_range = self.graph2.viewRange()[1]
+                # print(f"X-axis view range for graph2: Start = {self.graph2_x_range[0]}, End = {self.graph2_x_range[1]}")
+                # print(f"Y-axis view range for graph2: Start = {self.graph2_y_range[0]}, End = {self.graph2_y_range[1]}")
 
                 last_data = self.get_last_data_point("graph2")[0]
                 self.graph2.setLimits(xMin=0, xMax=last_data)
@@ -1223,6 +1231,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.is_playing[1]["is_playing"] = True
                 self.playButton.setText('Pause')
                 self.set_icon("Icons/pause.svg")
+                self.graph2_x_range = self.graph2.viewRange()[0]
+                self.graph2_y_range = self.graph2.viewRange()[1]
+                print(f"X-axis view range for graph2: Start = {self.graph2_x_range[0]}, End = {self.graph2_x_range[1]}")
+                print(f"Y-axis view range for graph2: Start = {self.graph2_y_range[0]}, End = {self.graph2_y_range[1]}")
+
                 # Allow free panning when playing
                 # self.set_panning_limits(self.graph2, False)
 
@@ -1235,6 +1248,29 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.set_icon("Icons/play-svgrepo-com.svg")
 
                     ######----->Yasmine  Get current view range for X and Y axes
+                    # self.graph1_x_range = self.graph1.viewRange()[0]
+                    # self.graph1_y_range = self.graph1.viewRange()[1]
+                    # self.graph2_x_range = self.graph2.viewRange()[0]
+                    # self.graph2_y_range = self.graph2.viewRange()[1]
+                    # print(
+                    #     f"X-axis view range for graph1: Start = {self.graph1_x_range[0]}, End = {self.graph1_x_range[1]}")
+                    # print(
+                    #     f"Y-axis view range for graph1: Start = {self.graph1_y_range[0]}, End = {self.graph1_y_range[1]}")
+                    # print(
+                    #     f"X-axis view range for graph2: Start = {self.graph2_x_range[0]}, End = {self.graph2_x_range[1]}")
+                    # print(
+                    #     f"Y-axis view range for graph2: Start = {self.graph2_y_range[0]}, End = {self.graph2_y_range[1]}")
+
+                    # Restrict panning beyond the last data point when pausing
+                    # self.set_panning_limits(self.current_graph, True)
+                    self.graph1.setLimits(xMin=0, xMax=last_data)
+                    self.graph2.setLimits(xMin=0, xMax=last_data)
+                    self.graph1.setLimits(yMin=-0.5, yMax=1)
+                    self.graph2.setLimits(yMin=-0.5, yMax=1)
+                else:
+                    graph["is_playing"] = True
+                    self.playButton.setText('Pause')
+                    self.set_icon("Icons/pause.svg")
                     self.graph1_x_range = self.graph1.viewRange()[0]
                     self.graph1_y_range = self.graph1.viewRange()[1]
                     self.graph2_x_range = self.graph2.viewRange()[0]
@@ -1248,16 +1284,6 @@ class MainWindow(QtWidgets.QMainWindow):
                     print(
                         f"Y-axis view range for graph2: Start = {self.graph2_y_range[0]}, End = {self.graph2_y_range[1]}")
 
-                    # Restrict panning beyond the last data point when pausing
-                    # self.set_panning_limits(self.current_graph, True)
-                    self.graph1.setLimits(xMin=0, xMax=last_data)
-                    self.graph2.setLimits(xMin=0, xMax=last_data)
-                    self.graph1.setLimits(yMin=-0.5, yMax=1)
-                    self.graph2.setLimits(yMin=-0.5, yMax=1)
-                else:
-                    graph["is_playing"] = True
-                    self.playButton.setText('Pause')
-                    self.set_icon("Icons/pause.svg")
                     # Allow free panning when playing
                     # self.set_panning_limits(self.current_graph, False)
 
@@ -1371,22 +1397,34 @@ class MainWindow(QtWidgets.QMainWindow):
         self.non_rect_window.show()
 
     # GLUE FUNCTIONS
+    # def get_glue_data(self):
+    #     if self.glued_data is None:
+    #         limits_glue1 = self.graph1_x_range
+    #         limits_glue2 = self.graph2_x_range
+    #         time1, data1 = self.signals["graph1"][0][0]
+    #         time2, data2 = self.signals["graph2"][0][0]
+    #         signal1 = {'x': time1, 'y': data1}
+    #         signal2 = {'x': time2, 'y': data2}
+    #         self.glued_data = [limits_glue1, limits_glue2, signal1, signal2]
 
+    def get_glued_info(self):
+        return self.glued_data
 
-    def get_glue_data(self):
+    def glue_graphs(self):
         limits_glue1 = self.graph1_x_range
         limits_glue2 = self.graph2_x_range
         time1, data1 = self.signals["graph1"][0][0]
         time2, data2 = self.signals["graph2"][0][0]
         signal1 = {'x': time1, 'y': data1}
         signal2 = {'x': time2, 'y': data2}
-        glued_data = [limits_glue1, limits_glue2, signal1, signal2]
+        self.glued_data = (limits_glue1, limits_glue2, signal1, signal2)
 
-        return glued_data
-
-    def glue_graphs(self):
-        self.glue_window = ChannelViewer.ChannelViewer(self.get_glue_data())
+    def open_glue(self):
+        self.glue_graphs()
+        self.glue_window = ChannelViewer.ChannelViewer(self.glued_data)
         self.glue_window.show()
+
+
 # ************************************** Main Function ************************************** #
 
 def main():
