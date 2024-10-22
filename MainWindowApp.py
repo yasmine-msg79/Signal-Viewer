@@ -27,50 +27,50 @@ import requests
 from Classes import ChannelViewer, NonRectangular
 
 
-class RealTimeCpuPlot(QtWidgets.QWidget):
-
-    def __init__(self, *args, **kwargs):
-        super(RealTimeCpuPlot, self).__init__(*args, **kwargs)
-
-        # Set window title and size
-        self.setWindowTitle("Real-Time CPU Usage")
-        self.setGeometry(100, 100, 800, 600)
-
-        # Create layout and plot widget
-        self.layout = QtWidgets.QVBoxLayout(self)
-        self.plot_widget = pg.PlotWidget()
-        self.layout.addWidget(self.plot_widget)
-
-        # Initialize plot data
-        self.plot_data = self.plot_widget.plot()
-
-        # Set labels and legend for the plot
-        self.plot_widget.setLabel('left', 'CPU Usage (%)')
-        self.plot_widget.setLabel('bottom', 'Time (s)')
-        self.plot_widget.addLegend()
-        self.plot_data = self.plot_widget.plot(name="CPU Usage")
-
-        # Set up a timer to update the plot every second
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.update_plot)
-        self.timer.start(1000)
-
-        # Initialize data list to store CPU usage values
-        self.data = []
-
-    def update_plot(self):
-        # Get current CPU usage
-        cpu_usage = psutil.cpu_percent()
-
-        # Append the CPU usage to the data list
-        self.data.append(cpu_usage)
-
-        # Keep only the last 100 data points
-        if len(self.data) > 100:
-            self.data.pop(0)
-
-        # Update the plot with the new data
-        self.plot_data.setData(self.data)
+# class RealTimeCpuPlot(QtWidgets.QWidget):
+#
+#     def __init__(self, *args, **kwargs):
+#         super(RealTimeCpuPlot, self).__init__(*args, **kwargs)
+#
+#         # Set window title and size
+#         self.setWindowTitle("Real-Time CPU Usage")
+#         self.setGeometry(100, 100, 800, 600)
+#
+#         # Create layout and plot widget
+#         self.layout = QtWidgets.QVBoxLayout(self)
+#         self.plot_widget = pg.PlotWidget()
+#         self.layout.addWidget(self.plot_widget)
+#
+#         # Initialize plot data
+#         self.plot_data = self.plot_widget.plot()
+#
+#         # Set labels and legend for the plot
+#         self.plot_widget.setLabel('left', 'CPU Usage (%)')
+#         self.plot_widget.setLabel('bottom', 'Time (s)')
+#         self.plot_widget.addLegend()
+#         self.plot_data = self.plot_widget.plot(name="CPU Usage")
+#
+#         # Set up a timer to update the plot every second
+#         self.timer = QtCore.QTimer()
+#         self.timer.timeout.connect(self.update_plot)
+#         self.timer.start(1000)
+#
+#         # Initialize data list to store CPU usage values
+#         self.data = []
+#
+#     def update_plot(self):
+#         # Get current CPU usage
+#         cpu_usage = psutil.cpu_percent()
+#
+#         # Append the CPU usage to the data list
+#         self.data.append(cpu_usage)
+#
+#         # Keep only the last 100 data points
+#         if len(self.data) > 100:
+#             self.data.pop(0)
+#
+#         # Update the plot with the new data
+#         self.plot_data.setData(self.data)
 
 
 class RealTimeSatellitePlot(QtWidgets.QWidget):
@@ -91,38 +91,65 @@ class RealTimeSatellitePlot(QtWidgets.QWidget):
         self.plot_data = self.plot_widget.plot()
 
         # Set labels and legend for the plot
-        self.plot_widget.setLabel('left', 'Position')
+        self.plot_widget.setLabel('left', 'Latitude')
         self.plot_widget.setLabel('bottom', 'Time (s)')
         self.plot_widget.addLegend()
         self.plot_data = self.plot_widget.plot(name="Satellite Position")
 
-        # Set up a timer to update the plot every second
+        # Set up a timer to update the plot every 5 seconds
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.update_plot)
-        self.timer.start(1000)
+        self.timer.start(5000)  # 5000 ms = 5 seconds
 
-        # Initialize data list to store satellite position values
-        self.data = []
+        # Initialize data lists
+        self.time_points = []
+        self.latitude_values = []
 
     def update_plot(self):
-        # Fetch actual satellite position data from an API or a data source
         try:
-            response = requests.get("https://api.wheretheiss.at/v1/satellites/25544")
+            base_url = "https://api.n2yo.com/rest/v1/satellite/positions"
+            satellite_id = "25544"
+            observer_lat = "41.702"
+            observer_lon = "-76.014"
+            observer_alt = "0"
+            seconds = "1"
+            api_key = "PECZAW-Y3BFYT-4TJFVE-5CUH"
+
+            api_url = f"{base_url}/{satellite_id}/{observer_lat}/{observer_lon}/{observer_alt}/{seconds}/&apiKey={api_key}"
+
+            response = requests.get(api_url)
+
+            if response.status_code != 200:
+                raise Exception(f"Failed to fetch data: {response.status_code} {response.reason}")
+
             data = response.json()
-            satellite_position = data['latitude']  # Example: using latitude as the position data
 
-            # Append the satellite position to the data list
-            self.data.append(satellite_position)
+            if 'positions' not in data:
+                raise KeyError("Response is missing 'positions' data")
 
-            # # Keep only the last 100 data points
-            # if len(self.data) > 100:
-            #     self.data.pop(0)
+            position = data['positions'][0]
+            timestamp = position['timestamp']
+            latitude = position['satlatitude']
+
+            self.time_points.append(timestamp)
+            self.latitude_values.append(latitude)
+
+            # Keep only the last 100 data points
+            if len(self.time_points) > 100:
+                self.time_points.pop(0)
+                self.latitude_values.pop(0)
 
             # Update the plot with the new data
-            self.plot_data.setData(self.data)
-        except Exception as e:
-            print(f"Error fetching satellite data: {e}")
+            self.plot_data.setData(x=self.time_points, y=self.latitude_values)
 
+        except requests.exceptions.RequestException as e:
+            print(f"Network error: {str(e)}")
+        except KeyError as e:
+            print(f"Missing data in response: {str(e)}")
+        except ValueError as e:
+            print(f"Value error: {str(e)}")
+        except Exception as e:
+            print(f"Failed to fetch real-time signal: {str(e)}")
 
 class MainWindow(QtWidgets.QMainWindow):
 
@@ -626,8 +653,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # i want when i click on this button the new window apear and run RealTimeDataCPU_Usage python file
 
         # Create a new window for the real-time CPU usage plot
-        self.real_time_cpu_plot = RealTimeCpuPlot()
-        self.real_time_cpu_plot.show()
+        # self.real_time_cpu_plot = RealTimeCpuPlot()
+        # self.real_time_cpu_plot.show()
 
         # Create a new window for thr real-time satellite position plot
         self.real_time_satellite_plot = RealTimeSatellitePlot()
