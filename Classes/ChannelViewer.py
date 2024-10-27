@@ -30,6 +30,7 @@ def get_signal_stat():
 
 
 class ChannelViewer(QDialog):
+    
     def __init__(self, glue_items, *args, **kwargs):
         super(ChannelViewer, self).__init__(*args, **kwargs)
         # self.limit_graph2 = None
@@ -119,15 +120,23 @@ class ChannelViewer(QDialog):
     # Fetch and update glue data.
     def plot_rect(self, signal, rect_plot):
         rect_plot.clear()
-        rect_plot.plot(signal['x'], signal['y'], pen='b')
+        red = random.randint(0, 255)
+        green = random.randint(0, 255)
+        blue = random.randint(0, 255)
+        pen_color = QColor(red, green, blue)
+        rect_plot.plot(signal['x'], signal['y'], pen=pg.mkPen(color=pen_color))
         rect_plot.setTitle(f"{rect_plot}")
         rect_plot.setLabel('left', 'Amplitude')
         rect_plot.setLabel('bottom', 'Time')
         rect_plot.showGrid(x=True, y=True)
 
         rect_plot.signal = signal
+    
     def update_gap(self, value):
-        self.Gap_value = value
+        pass
+        # self.Gap_value = value
+        # if self.selected_segments:
+        #     self.glue_segments()
 
     # Button logic: clear, show/hide glue editor, and glue.
     def clear_glue_editor(self):
@@ -162,10 +171,9 @@ class ChannelViewer(QDialog):
 
     def toggle_glue_editor(self):
         if self.glue_button.isChecked():
-            print(self.start_line2)
+            self.glue_button.setText("Hide Glue Editor")
             self.glue_editor.show()
             self.add_segment_selection_lines()
-            print(self.end_line2)
             self.clear_button.show()
             self.snapshot_button.show()
             self.action_glue_button.show()
@@ -173,6 +181,7 @@ class ChannelViewer(QDialog):
             self.gap_slider.show()
             self.gap_label.show()
         else:
+            self.glue_button.setText("Show Glue Editor")
             self.clear_glue_editor()
             self.clear_button.hide()
             self.snapshot_button.hide()
@@ -185,22 +194,18 @@ class ChannelViewer(QDialog):
             self.graph1.removeItem(self.end_line1)
             self.graph2.removeItem(self.start_line2)
             self.graph2.removeItem(self.end_line2)
-            # self.start_line1 = None
-            # self.end_line1 = None
-            # self.start_line2 = None
-            # self.end_line2 = None
 
     # Glue Logic Implementation.
 
     def add_segment_selection_lines(self):
         if self.start_line1 is None and self.end_line1 is None and self.start_line2 is None and self.end_line2 is None:
-            self.start_line1 = pg.InfiniteLine(pos=10, angle=90, movable=True,
+            self.start_line1 = pg.InfiniteLine(pos=self.signal1['x'][0], angle=90, movable=True,
                                                pen=pg.mkPen(color='r', width=2))
-            self.end_line1 = pg.InfiniteLine(pos=50, angle=90, movable=True,
+            self.end_line1 = pg.InfiniteLine(pos=self.signal1['x'][-1], angle=90, movable=True,
                                              pen=pg.mkPen(color='g', width=2))
-            self.start_line2 = pg.InfiniteLine(pos=10, angle=90, movable=True,
+            self.start_line2 = pg.InfiniteLine(pos=self.signal2['x'][0], angle=90, movable=True,
                                                pen=pg.mkPen(color='r', width=2))
-            self.end_line2 = pg.InfiniteLine(pos=50, angle=90, movable=True,
+            self.end_line2 = pg.InfiniteLine(pos=self.signal2['x'][-1], angle=90, movable=True,
                                              pen=pg.mkPen(color='g', width=2))
 
         self.graph1.addItem(self.start_line1)

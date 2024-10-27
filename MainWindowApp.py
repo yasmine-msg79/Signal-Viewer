@@ -29,47 +29,47 @@ from Classes import ChannelViewer, NonRectangular
 
 
 # class RealTimeCpuPlot(QtWidgets.QWidget):
-#
+
 #     def __init__(self, *args, **kwargs):
 #         super(RealTimeCpuPlot, self).__init__(*args, **kwargs)
-#
+
 #         # Set window title and size
 #         self.setWindowTitle("Real-Time CPU Usage")
 #         self.setGeometry(100, 100, 800, 600)
-#
+
 #         # Create layout and plot widget
 #         self.layout = QtWidgets.QVBoxLayout(self)
 #         self.plot_widget = pg.PlotWidget()
 #         self.layout.addWidget(self.plot_widget)
-#
+
 #         # Initialize plot data
 #         self.plot_data = self.plot_widget.plot()
-#
+
 #         # Set labels and legend for the plot
 #         self.plot_widget.setLabel('left', 'CPU Usage (%)')
 #         self.plot_widget.setLabel('bottom', 'Time (s)')
 #         self.plot_widget.addLegend()
 #         self.plot_data = self.plot_widget.plot(name="CPU Usage")
-#
+
 #         # Set up a timer to update the plot every second
 #         self.timer = QtCore.QTimer()
 #         self.timer.timeout.connect(self.update_plot)
 #         self.timer.start(1000)
-#
+
 #         # Initialize data list to store CPU usage values
 #         self.data = []
-#
+
 #     def update_plot(self):
 #         # Get current CPU usage
 #         cpu_usage = psutil.cpu_percent()
-#
+
 #         # Append the CPU usage to the data list
 #         self.data.append(cpu_usage)
-#
+
 #         # Keep only the last 100 data points
 #         if len(self.data) > 100:
 #             self.data.pop(0)
-#
+
 #         # Update the plot with the new data
 #         self.plot_data.setData(self.data)
 
@@ -77,7 +77,7 @@ def get_glued_data():
     return MainWindow().get_glued_info()
 
 
-#class RealTimeCpuPlot(QtWidgets.QWidget):
+# class RealTimeCpuPlot(QtWidgets.QWidget):
 
 #     def __init__(self, *args, **kwargs):
 #         super(RealTimeCpuPlot, self).__init__(*args, **kwargs)
@@ -345,8 +345,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.speedSlider.valueChanged.connect(self.change_speed)
 
         # Connect color buttons to channel color picking
-        self.colorButtonGraph1.clicked.connect(self.pick_channel_color)
-        self.colorButtonGraph2.clicked.connect(self.pick_channel_color)
+        self.colorButtonGraph1.clicked.connect(self.pick_channel_color_graph_1)
+        self.colorButtonGraph2.clicked.connect(self.pick_channel_color_graph_2)
 
         # Connect graph selection combo box to graph change
         self.graphSelection.currentIndexChanged.connect(
@@ -363,8 +363,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.deleteButtonGraph2.clicked.connect(self.delete_selected_ch)
 
         # Connect label text input to channel label change
-        self.addLabelGraph1.returnPressed.connect(self.change_channel_label)
-        self.addLabelGraph2.returnPressed.connect(self.change_channel_label)
+        self.addLabelGraph1.returnPressed.connect(self.change_channel_label_1)
+        self.addLabelGraph2.returnPressed.connect(self.change_channel_label_2)
         # self.signal_Link_Label.returnPressed.connect(self.signal_Link)
 
         # Connect hide list items to item checking/unchecking
@@ -922,7 +922,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.lookup[graph].setLimits(xMin=0, xMax=last_data[0])
                 else:
                     channel_name = self.channelsGraph1.currentText() if graph == "graph1" else self.channelsGraph2.currentText()
-                    self.show_error_message(f"Data has finished for {graph} - {channel_name}.")
+                    # self.show_error_message(f"Data has finished for {graph} - {channel_name}.")
                     self.is_playing[self.graph_mapping[graph]]["is_playing"] = False
                     self.playButton.setText('Play')
                     self.set_icon("Icons/play-svgrepo-com.svg")
@@ -1371,25 +1371,22 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # ************************************** Colors, Labels, and Legends **************************************
 
-    def change_channel_label(self):
-        graph_name = self.get_graph_name()
-        if graph_name == 'graph1':
-            if self.channelsGraph1.currentIndex() == 0:
-                self.show_error_message('Select Channel first')
-            else:
-                self.channelsGraph1.setItemText(
-                    self.channelsGraph1.currentIndex(), self.addLabelGraph1.text())
-                self.fill_list1()
-        elif graph_name == 'graph2':
-            if self.channelsGraph2.currentIndex() == 0:
-                self.show_error_message('Select Channel first')
-            else:
-                self.channelsGraph2.setItemText(
-                    self.channelsGraph2.currentIndex(), self.addLabelGraph2.text())
-                self.fill_list2()
+    def change_channel_label_1(self):
+        if self.channelsGraph1.currentIndex() == 0:
+            self.show_error_message('Select Channel first')
         else:
-            self.show_error_message('Select Graph first')
+            self.channelsGraph1.setItemText(
+                self.channelsGraph1.currentIndex(), self.addLabelGraph1.text())
+            self.fill_list1()
 
+    def change_channel_label_2(self):
+        if self.channelsGraph2.currentIndex() == 0:
+            self.show_error_message('Select Channel first')
+        else:
+            self.channelsGraph2.setItemText(
+                self.channelsGraph2.currentIndex(), self.addLabelGraph2.text())
+            self.fill_list2()
+    
     def add_legend(self, graph_name):
         channelsGraph = self.channelsGraph1 if graph_name == "graph1" else self.channelsGraph2
         addLabel = self.addLabelGraph1 if graph_name == "graph1" else self.addLabelGraph2
@@ -1442,11 +1439,8 @@ class MainWindow(QtWidgets.QMainWindow):
             if j < len(signals_lines):
                 signals_lines[j].setPen(color)
 
-    def pick_channel_color(self):
-        graph = self.get_graph_name()
-        channelsGraph = self.channelsGraph1 if graph == 'graph1' else self.channelsGraph2
-
-        selected_channel_index = channelsGraph.currentIndex()
+    def pick_channel_color_graph_1(self):
+        selected_channel_index = self.channelsGraph1.currentIndex()
 
         if selected_channel_index == 0:
             self.show_error_message('Channel not selected')
@@ -1456,8 +1450,26 @@ class MainWindow(QtWidgets.QMainWindow):
 
             if color.isValid():
                 new_color = pg.mkColor(color.name())
-                channels_color = self.channels_color[graph]
-                signals_lines = self.signals_lines[graph]
+                channels_color = self.channels_color['graph1']
+                signals_lines = self.signals_lines['graph1']
+
+                if selected_channel_index <= len(channels_color) and selected_channel_index <= len(signals_lines):
+                    channels_color[selected_channel_index - 1] = new_color
+                    signals_lines[selected_channel_index - 1].setPen(new_color)
+
+    def pick_channel_color_graph_2(self):
+        selected_channel_index = self.channelsGraph2.currentIndex()
+
+        if selected_channel_index == 0:
+            self.show_error_message('Channel not selected')
+        else:
+            color_dialog = QColorDialog(self)
+            color = color_dialog.getColor()
+
+            if color.isValid():
+                new_color = pg.mkColor(color.name())
+                channels_color = self.channels_color['graph2']
+                signals_lines = self.signals_lines['graph2']
 
                 if selected_channel_index <= len(channels_color) and selected_channel_index <= len(signals_lines):
                     channels_color[selected_channel_index - 1] = new_color

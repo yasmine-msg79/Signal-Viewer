@@ -101,9 +101,18 @@ class SignalReportGenerator(QWidget):
         # Generate PDF report with the selected snapshots
         self.create_pdf_report(stats, selected_snapshots)
 
-    def create_pdf_report(self, stats, selected_snapshots, filename="signal_report_with_snapshots.pdf"):
+    def create_pdf_report(self, stats, selected_snapshots):
         """Creates a PDF report with the selected snapshots."""
-        pdf = SimpleDocTemplate(filename, pagesize=letter)
+        # Ask the user where to save the PDF
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        file_path, _ = QFileDialog.getSaveFileName(self, "Save PDF Report", "", "PDF Files (*.pdf);;All Files (*)", options=options)
+        
+        if not file_path:
+            QMessageBox.warning(self, "No File Selected", "Please select a file path to save the report.")
+            return
+
+        pdf = SimpleDocTemplate(file_path, pagesize=letter)
         elements = []
         styles = getSampleStyleSheet()
 
@@ -160,8 +169,6 @@ class SignalReportGenerator(QWidget):
         # Finalize the PDF document
         pdf.build(elements)
         QMessageBox.information(self, "Success!", "Your report has been successfully created and saved!")
-
-
 
 
 if __name__ == '__main__':
