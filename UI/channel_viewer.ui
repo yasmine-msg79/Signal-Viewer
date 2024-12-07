@@ -28,7 +28,7 @@ background-color: #242526;
 color:rgb(255, 255, 255);
 </string>
   </property>
-  <widget class="QWidget" name="GlueEditor" native = "true">
+  <widget class="QWidget" name="GlueEditor" native="true">
    <property name="geometry">
     <rect>
      <x>30</x>
@@ -259,7 +259,7 @@ background-color:  rgb(0, 115, 173);
 </string>
    </property>
    <property name="text">
-    <string>Show/Hide</string>
+    <string>Show Glue Editor</string>
    </property>
    <property name="checkable">
     <bool>true</bool>
@@ -275,7 +275,7 @@ background-color:  rgb(0, 115, 173);
     </rect>
    </property>
   </widget>
-  <widget class="QWidget" name="graph2" native ="true">
+  <widget class="QWidget" name="graph2" native="true">
    <property name="geometry">
     <rect>
      <x>30</x>

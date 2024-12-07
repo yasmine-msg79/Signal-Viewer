@@ -2,7 +2,7 @@ import sys
 import os
 import random
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QComboBox, QMessageBox, \
-    QListWidget, QAbstractItemView
+    QListWidget, QAbstractItemView, QFileDialog
 from PyQt6.QtCore import QTimer
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
@@ -66,7 +66,7 @@ class SignalReportGenerator(QWidget):
         # Limit the length of the data array for memory management
         if len(self.signal_data["Signal"]) > 1000:
             self.signal_data["Signal"].pop(0)
-
+   
     def generate_report(self):
         # Get selected snapshots from the list
         selected_items = self.snapshot_list.selectedItems()
@@ -79,40 +79,26 @@ class SignalReportGenerator(QWidget):
         # Fetch the latest data for the chosen signal (using 'Signal')
         selected_signal_data = self.signal_data["Signal"]
 
-        # Calculate basic statistics for the report
-        # mean = sum(selected_signal_data) / len(selected_signal_data) if selected_signal_data else 0
-        # std_dev = (sum((x - mean) ** 2 for x in selected_signal_data) / len(
-        #     selected_signal_data)) ** 0.5 if selected_signal_data else 0
-        # min_value = min(selected_signal_data, default=0)
-        # max_value = max(selected_signal_data, default=0)
-        # duration = len(selected_signal_data) * 0.5  # Assuming each data point represents 0.5 seconds
-        #
-        # # Prepare stats for the report
-        # stats = [{
-        #     "Mean": mean,
-        #     "Std Dev": std_dev,
-        #     "Min": min_value,
-        #     "Max": max_value,
-        #     "Duration": duration
-        # }]
-
         stats = ChannelViewer.get_signal_stat()
+        # stats = [   # Example statistics data
+        #     {'Mean': 0.5, 'Std': 0.1, 'Min': 0.3, 'Max': 0.7, 'Duration': 10},
+        #     {'Mean': 0.6, 'Std': 0.2, 'Min': 0.4, 'Max': 0.8, 'Duration': 10},
+        #     {'Mean': 0.7, 'Std': 0.3, 'Min': 0.5, 'Max': 0.9, 'Duration': 10}
+        # ]
 
-        # Generate PDF report with the selected snapshots
-        self.create_pdf_report(stats, selected_snapshots)
 
-    def create_pdf_report(self, stats, selected_snapshots):
-        """Creates a PDF report with the selected snapshots."""
-        # Ask the user where to save the PDF
+        # Ask the user for the location to save the file
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        file_path, _ = QFileDialog.getSaveFileName(self, "Save PDF Report", "", "PDF Files (*.pdf);;All Files (*)", options=options)
+        file_path, _ = QFileDialog.getSaveFileName(self, "Save Report As", "", "PDF Files (*.pdf);;All Files (*)", options=options)
         
-        if not file_path:
-            QMessageBox.warning(self, "No File Selected", "Please select a file path to save the report.")
-            return
+        if file_path:
+            # Generate PDF report with the selected snapshots
+            self.create_pdf_report(stats, selected_snapshots, filename=file_path)
 
-        pdf = SimpleDocTemplate(file_path, pagesize=letter)
+    def create_pdf_report(self, stats, selected_snapshots, filename="signal_report_with_snapshots.pdf"):
+        """Creates a PDF report with the selected snapshots."""
+        pdf = SimpleDocTemplate(filename, pagesize=letter)
         elements = []
         styles = getSampleStyleSheet()
 
@@ -169,6 +155,55 @@ class SignalReportGenerator(QWidget):
         # Finalize the PDF document
         pdf.build(elements)
         QMessageBox.information(self, "Success!", "Your report has been successfully created and saved!")
+        def generate_report_alternative(self):
+            # Get selected snapshots from the list
+            selected_items = self.snapshot_list.selectedItems()
+            selected_snapshots = [item.text() for item in selected_items]
+
+            if not selected_snapshots:
+                QMessageBox.warning(self, "No Selection", "Please select at least one snapshot.")
+                return
+
+            # Fetch the latest data for the chosen signal (using 'Signal')
+            selected_signal_data = self.signal_data["Signal"]
+
+            # stats = ChannelViewer.get_signal_stat()
+            stats = [   # Example statistics data
+                {'Mean': 0.5, 'Std': 0.1, 'Min': 0.3, 'Max': 0.7, 'Duration': 10},
+                {'Mean': 0.6, 'Std': 0.2, 'Min': 0.4, 'Max': 0.8, 'Duration': 10},
+                {'Mean': 0.7, 'Std': 0.3, 'Min': 0.5, 'Max': 0.9, 'Duration': 10}
+            ]
+
+            # Ask the user for the location to save the file
+            options = QFileDialog.Options()
+            options |= QFileDialog.DontUseNativeDialog
+            file_path, _ = QFileDialog.getSaveFileName(self, "Save Report As", "", "Text Files (*.txt);;All Files (*)", options=options)
+            
+            if file_path:
+                # Generate text report with the selected snapshots
+                self.create_text_report(stats, selected_snapshots, filename=file_path)
+
+        def create_text_report(self, stats, selected_snapshots, filename="signal_report_with_snapshots.txt"):
+            """Creates a text report with the selected snapshots."""
+            with open(filename, 'w') as file:
+                file.write("Your Snapshot Report\n")
+                file.write("====================\n\n")
+                file.write("Here are the statistics for the selected snapshots:\n\n")
+
+                # Statistics table (using 'Signal')
+                file.write("Mean\tStd\tMin\tMax\tDuration (s)\n")
+                for stat in stats:
+                    file.write(f"{stat.get('Mean', 0):.2f}\t{stat.get('Std', 0):.2f}\t{stat.get('Min', 0):.2f}\t{stat.get('Max', 0):.2f}\t{stat.get('Duration', 0):.2f}\n")
+
+                file.write("\nSelected Snapshots:\n")
+                for snapshot_name in selected_snapshots:
+                    snapshot_path = f"{snapshot_name}"
+                    if os.path.exists(snapshot_path):
+                        file.write(f"Snapshot: {snapshot_name}\n")
+                    else:
+                        file.write(f"Snapshot not found: {snapshot_name}\n")
+
+            QMessageBox.information(self, "Success!", "Your report has been successfully created and saved!")
 
 
 if __name__ == '__main__':

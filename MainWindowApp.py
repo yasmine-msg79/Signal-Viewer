@@ -13,10 +13,10 @@ import csv
 import os
 import qdarkstyle
 from pyqtgraph import PlotWidget
-from PyQt5.QtWidgets import QVBoxLayout
-from PyQt5.QtWidgets import QWidget
-from PyQt5.QtGui import QPixmap, QPainter
-from PyQt5.QtGui import QPainter
+from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QWidget
+from PyQt6.QtGui import QPixmap, QPainter
+from PyQt6.QtGui import QPainter
 import pyqtgraph.exporters
 import random
 from PyQt6.QtCore import Qt
@@ -287,6 +287,7 @@ class MainWindow(QtWidgets.QMainWindow):
             }
         """)
 
+       
         # Connect signals to slots
         self.importButton.clicked.connect(self.browse)
         self.connectButton.clicked.connect(self.connectFunction)

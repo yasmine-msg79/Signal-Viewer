@@ -132,11 +132,7 @@ class ChannelViewer(QDialog):
 
         rect_plot.signal = signal
     
-    def update_gap(self, value):
-        pass
-        # self.Gap_value = value
-        # if self.selected_segments:
-        #     self.glue_segments()
+        self.glue_segments()
 
     # Button logic: clear, show/hide glue editor, and glue.
     def clear_glue_editor(self):
@@ -213,6 +209,8 @@ class ChannelViewer(QDialog):
         self.graph2.addItem(self.start_line2)
         self.graph2.addItem(self.end_line2)
 
+
+
     def select_segments(self, signal1, signal2):
         start_index1 = np.searchsorted(signal1['x'], self.start_line1.value())
         end_index1 = np.searchsorted(signal1['x'], self.end_line1.value())
@@ -224,8 +222,17 @@ class ChannelViewer(QDialog):
 
         self.selected_segments.append(segment1)
         self.selected_segments.append(segment2)
+    
+    
+    def update_gap(self, value):
+        self.Gap_value = value
+        if self.selected_segments:
+            self.glue_segments()
 
     def glue_segments(self):
+        if len(self.selected_segments) < 2:
+            return
+
         seg1, seg2 = self.selected_segments
 
         def_gap = seg2['x'][0] - seg1['x'][-1]
@@ -238,7 +245,7 @@ class ChannelViewer(QDialog):
         if actual_gap > 0:
             interp_x = np.linspace(seg1['x'][-1], seg2['x'][0], 50)
             f = interp1d([seg1['x'][-1], (seg2['x'][0] + seg1['x'][-1]) // 2, seg2['x'][0]],
-                         [seg1['y'][-1], (seg2['y'][0] + seg1['y'][-1]) // 2, seg2['y'][0]], kind='quadratic')
+                         [seg1['y'][-1], (seg2['y'][0] + seg1['y'][-1]) // 2, seg2['y'][0]], kind=self.set_interpolation_order)
             interp_y = f(interp_x)
 
             glued_x = np.concatenate((seg1['x'], interp_x, seg2['x']))
@@ -258,11 +265,18 @@ class ChannelViewer(QDialog):
             'x': glued_x,
             'y': glued_y
         }
-        # self.Glue_Editor.plot(glued_x, glued_y, pen='g')
-        self.plot_rect(signal_glued, self.Glue_Editor)
+
+        # Plot the original segments in different colors
+        self.Glue_Editor.plot(seg1['x'], seg1['y'], pen=pg.mkPen(color='r'))
+        self.Glue_Editor.plot(seg2['x'], seg2['y'], pen=pg.mkPen(color='b'))
+
+        # Plot the glued signal in green
+        self.Glue_Editor.plot(glued_x, glued_y, pen=pg.mkPen(color='g'))
+
         self.calc_statistics(signal_glued)
 
-    # Report Related functions: statistics, snapshots and report window launch.
+    def set_interpolation_order(self, order):
+        self.interpolation_order = order
 
     def calc_statistics(self, signal):
         mean_val = np.mean(signal['y'])
@@ -282,15 +296,14 @@ class ChannelViewer(QDialog):
         painter.end()
 
         snapshot_name = f"snapshot_{len(self.snapshots) + 1}.png"
-        pixmap.save(snapshot_name)
-        self.snapshots.append({'name': snapshot_name, 'image': pixmap})
+        pixmap.save(snapshot_name)        
+        QMessageBox.information(self, "Snapshot Saved", f"Snapshot saved: {snapshot_name}")
         print(f"Snapshot saved: {snapshot_name}")
         print(f"snapshots:{self.snapshots}")
+        self.snapshots.append({'name': snapshot_name, 'image': pixmap})
 
-    # @staticmethod
-    # def get_snapshots():
-    #     return ChannelViewer().snapshots
 
+   
     def clear_snapshots(self):
         self.snapshots.clear()
         print("snapshots cleared")
@@ -299,134 +312,7 @@ class ChannelViewer(QDialog):
         self.report_window = ReportGenerate.SignalReportGenerator(self.snapshots)
         self.report_window.show()
 
-    #  browsing
-    # def create_signal_widget(self, index):
-    #
-    #     signal_widget = QGroupBox(f'Signal_{index + 1}')
-    #     signal_widget.setStyleSheet("background-color: white;")
-    #     signal_layout = QHBoxLayout()
-    #     viewer1_checkbox = QCheckBox("Viewer1")
-    #     viewer2_checkbox = QCheckBox("Viewer2")
-    #     signal_layout.addWidget(viewer1_checkbox)
-    #     signal_layout.addWidget(viewer2_checkbox)
-    #     viewer1_checkbox.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-    #     viewer2_checkbox.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-    #
-    #     viewer1_checkbox.stateChanged.connect(lambda state: self.handle_viewer_checkbox(state, index, self.graph1))
-    #     viewer2_checkbox.stateChanged.connect(lambda state: self.handle_viewer_checkbox(state, index, self.graph2))
-    #
-    #     signal_widget.setMinimumWidth(200)
-    #     signal_widget.setMinimumHeight(100)
-    #     signal_widget.setLayout(signal_layout)
-    #    return signal_widget
 
-    # def add_signal_to_list(self, index):
-    #     item = QListWidgetItem(f"Signal_{index + 1}")
-    #     item_widget = self.create_signal_widget(index)
-    #     self.signal_block.addItem(item)
-    #     self.signal_block.setItemWidget(item, item_widget)
-    #     self.hidden_layout.setSpacing(20)
-    #
-    #
-    # def handle_viewer_checkbox(self, state, index, viewer):
-    #     if state == 2:  # Checked
-    #         self.plot_signal(index, viewer)
-
-    # def plot_signal(self, index, viewer):
-    #     signal = self.active_signals[index]
-    #
-    #     if viewer.objectName() == "graph1":
-    #         display_rect_signal(signal, self.graph1)
-    #     else:
-    #         display_rect_signal(signal, self.graph2)
-
-
-#     def extract_signal_data(self, source):
-#         try:
-#             if source.endswith('.csv'):
-#                 df = pd.read_csv(source)
-#                 signal = {
-#                     'x': df.iloc[:, 0].values,  # First column (e.g., Time)
-#                     'y': df.iloc[:, 1].values  # Second column (e.g., Amplitude)
-#                 }
-#                 print(self.active_signals)
-#                 return signal
-#         except Exception as e:
-#             print(f"Error extracting signal data: {e}")
-#             return None
-#
-#     # API handling
-#     def fetch_real_time_signal(self):
-#         """Fetch real-time signal data (satellite positions) from an API and update the graphs."""
-#         try:
-#
-#             base_url = "https://api.n2yo.com/rest/v1/satellite/positions"
-#             satellite_id = "25544"
-#             observer_lat = "41.702"
-#             observer_lon = "-76.014"
-#             observer_alt = "0"
-#             seconds = "300"
-#             api_key = "PECZAW-Y3BFYT-4TJFVE-5CUH"
-#
-# api_url = f"{base_url}/{satellite_id}/{observer_lat}/{observer_lon}/{observer_alt}/{seconds}/&apiKey={api_key}"
-#
-#             response = requests.get(api_url)
-#
-#             if response.status_code != 200:
-#                 raise Exception(f"Failed to fetch data: {response.status_code} {response.reason}")
-#
-#             data = response.json()
-#
-#             if 'positions' not in data:
-#                 raise KeyError("Response is missing 'positions' data")
-#
-#             time_points = [pos['timestamp'] for pos in data['positions']]
-#             signal_values = [pos['satlatitude'] for pos in data['positions']]
-#
-#             real_time_signal = {
-#                 'x': np.array(time_points, dtype=float),
-#                 'y': np.array(signal_values, dtype=float)  #
-#             }
-#
-#             self.active_signals.append(real_time_signal)
-#             # self.add_signal_to_list(len(self.active_signals) - 1)
-#
-#             display_rect_signal(real_time_signal, self.graph1)
-#             display_rect_signal(real_time_signal, self.graph2)
-#
-#         except requests.exceptions.RequestException as e:
-#             QMessageBox.critical(self, "Error", f"Network error: {str(e)}")
-#         except KeyError as e:
-#             QMessageBox.critical(self, "Error", f"Missing data in response: {str(e)}")
-#         except ValueError as e:
-#             QMessageBox.critical(self, "Error", f"Value error: {str(e)}")
-#         except Exception as e:
-#             QMessageBox.critical(self, "Error", f"Failed to fetch real-time signal: {str(e)}")
-#
-#
-# # simulate real time emitter
-# app = Flask(__name__)
-# current_signal = {'x': [], 'y': []}
-# running = True
-#
-#
-# @app.route('/')
-# def index():
-#     return "test"
-#
-#
-# @app.route('/api/signal', methods=['GET'])
-# def get_signal():
-#     return jsonify(current_signal)
-#
-#
-# @app.route('/stop', methods=['POST'])
-# def stop_signal():
-#     global running
-#     running = False
-#     return jsonify({"status": "Signal generation stopped."})
-#
-#
 def generate_signal(length):
     x = np.linspace(0, 100, length)
     y = np.sin(x) + 0.5 * np.random.randn(length)
