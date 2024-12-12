@@ -231,6 +231,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.graph2_signals_paths = []
 
         # Play/Pause State
+
+
+
+
+
+
+        
         self.is_playing = [{"graph": "graph1", "is_playing": True}, {
             "graph": "graph2", "is_playing": False}]
 
@@ -359,7 +366,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.channelsGraph2.currentIndexChanged.connect(
             lambda i, graph="graph2": self.handle_selected_channels_change(graph, i))
 
-        # Connect delete buttons to channel deletion
+        # Connect delete buttons to channel deletionb
         self.deleteButtonGraph1.clicked.connect(self.delete_selected_ch)
         self.deleteButtonGraph2.clicked.connect(self.delete_selected_ch)
 
@@ -831,7 +838,7 @@ class MainWindow(QtWidgets.QMainWindow):
             min_val = min(np.min(all_data_graph1), np.min(all_data_graph2))
             max_val = max(np.max(all_data_graph1), np.max(all_data_graph2))
             self.graph1.setLimits(yMin=min_val, yMax=max_val)
-            self.graph2.setLimits(yMin=min_val, yMax=max_val)
+            self.graph2.setLimits(yMin=max_val, yMax=max_val)
 
     def plot_common_linked_signal(self):
         for i, graph_name in enumerate(["graph1", "graph2"]):
@@ -930,11 +937,10 @@ class MainWindow(QtWidgets.QMainWindow):
                     return
             else:
                 signal_line.setData([], [], visible=False)
-
     def link_graphs(self):
         # Check if there are channels in both graphs
         if not self.signals["graph1"]:
-            self.show_error_message("Graph 1 is empty. Please upload channels first.")
+            self.show_error_message("Graph 1 is empty. Please upload channels first.") 
             return
         if not self.signals["graph2"]:
             self.show_error_message("Graph 2 is empty. Please upload channels first.")
@@ -942,8 +948,37 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.update_selected_graph(2)
         self.graphSelection.setCurrentIndex(2)
+        
+        # Link the view boxes of both graphs
+        self.graph1.setXLink(self.graph2)
+        self.graph1.setYLink(self.graph2)
+        
+        # Connect signals for any changes in either graph
+        self.graph1.sigPlotChanged.connect(lambda: self.sync_graphs(self.graph1, self.graph2))
+        self.graph2.sigPlotChanged.connect(lambda: self.sync_graphs(self.graph2, self.graph1))
+        
+        self.graph1.sigRangeChanged.connect(lambda window, viewRange: self.sync_views(self.graph2, viewRange))
+        self.graph2.sigRangeChanged.connect(lambda window, viewRange: self.sync_views(self.graph1, viewRange))
+        
         for graph in self.is_playing:
             graph["is_playing"] = True
+
+    def sync_views(self, target_widget, viewRange):
+        """Synchronize the view of the target widget with the given range"""
+        if self.graphSelection.currentIndex() == 2:
+            target_widget.setXRange(*viewRange[0], padding=0)
+            target_widget.setYRange(*viewRange[1], padding=0)
+
+    def sync_graphs(self, source_graph, target_graph):
+        """Synchronize any changes between source and target graphs"""
+        if self.graphSelection.currentIndex() == 2:
+            # Sync data
+            for i in range(len(self.signals[source_graph.objectName()])):
+                if i < len(self.signals[target_graph.objectName()]):
+                    time = self.signals[source_graph.objectName()][i][0][0]
+                    data = self.signals[source_graph.objectName()][i][0][1]
+                    self.signals_lines[target_graph.objectName()][i].setData(time[:self.data_index[target_graph.objectName()]], 
+                                                                        data[:self.data_index[target_graph.objectName()]])
 
     # ************************************** Transfer signals **************************************
 

@@ -6,7 +6,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap, QPainter, QPen, QColor
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QListWidget, QPushButton, QFrame, QApplication, QDialog, QMessageBox,
                              QFileDialog, QGroupBox, QHBoxLayout, QCheckBox, QLineEdit, QListWidgetItem, QSizePolicy,
-                             QSlider, QLabel)
+                             QSlider, QLabel, QComboBox)
 import pyqtgraph as pg
 from scipy.interpolate import interp1d
 import MainWindowApp
@@ -93,12 +93,13 @@ class ChannelViewer(QDialog):
         self.graph1.setObjectName("graph1")
         self.graph2.setObjectName("graph2")
 
-        # sample signals to test ui
-        # self.signal1 = generate_signal(50)
-        # self.signal2 = generate_signal(50)
+        # Add fixed colors for signals
+        self.signal1_color = pg.mkPen(color='g', width=2)  # Green for signal 1
+        self.signal2_color = pg.mkPen(color='b', width=2)  # Blue for signal 2
+        
         if self.signal1 and self.signal2:
-            self.plot_rect(self.signal1, self.graph1)
-            self.plot_rect(self.signal2, self.graph2)
+            self.plot_rect(self.signal1, self.graph1, self.signal1_color)
+            self.plot_rect(self.signal2, self.graph2, self.signal2_color)
 
         # display_rect_signal(self.signal1, self.graph1)
         # display_rect_signal(self.signal2, self.graph2)
@@ -117,14 +118,23 @@ class ChannelViewer(QDialog):
         self.report_generate_button.clicked.connect(self.report_generate)
         self.gap_slider.valueChanged.connect(self.update_gap)
 
+        # Add interpolation combo box
+        self.interp_combo = QComboBox()
+        self.interp_combo.addItems(['linear', 'quadratic', 'cubic'])
+        self.interp_combo.setCurrentText('linear')
+        # Connect combo box change signal to update method
+        self.interp_combo.currentTextChanged.connect(self.update_interpolation)
+        
+        # Add to UI layout
+        interp_layout = QHBoxLayout()
+        interp_layout.addWidget(QLabel("Interpolation:"))
+        interp_layout.addWidget(self.interp_combo)
+        self.glue_editor.layout().addLayout(interp_layout)
+
     # Fetch and update glue data.
-    def plot_rect(self, signal, rect_plot):
+    def plot_rect(self, signal, rect_plot, pen_color):
         rect_plot.clear()
-        red = random.randint(0, 255)
-        green = random.randint(0, 255)
-        blue = random.randint(0, 255)
-        pen_color = QColor(red, green, blue)
-        rect_plot.plot(signal['x'], signal['y'], pen=pg.mkPen(color=pen_color))
+        rect_plot.plot(signal['x'], signal['y'], pen=pen_color)
         rect_plot.setTitle(f"{rect_plot}")
         rect_plot.setLabel('left', 'Amplitude')
         rect_plot.setLabel('bottom', 'Time')
@@ -233,50 +243,98 @@ class ChannelViewer(QDialog):
         if len(self.selected_segments) < 2:
             return
 
-        seg1, seg2 = self.selected_segments
+        try:
+            seg1, seg2 = self.selected_segments
 
-        def_gap = seg2['x'][0] - seg1['x'][-1]
+            def_gap = seg2['x'][0] - seg1['x'][-1]
+            actual_gap = def_gap + self.Gap_value if self.Gap_value != 0 else def_gap
 
-        if self.Gap_value != 0:
-            actual_gap = def_gap + self.Gap_value
-        else:
-            actual_gap = def_gap
+            if actual_gap > 0:
+                # Get interpolation method
+                interp_method = self.interp_combo.currentText()
+                
+                # Create more points for higher order interpolation
+                if interp_method in ['quadratic', 'cubic']:
+                    # Use more points from the ends of segments for higher order interpolation
+                    x_points = [
+                        seg1['x'][-2], seg1['x'][-1],  # Two points from end of first segment
+                        (seg1['x'][-1] + seg2['x'][0])/2,  # Midpoint
+                        seg2['x'][0], seg2['x'][1]  # Two points from start of second segment
+                    ]
+                    y_points = [
+                        seg1['y'][-2], seg1['y'][-1],
+                        (seg1['y'][-1] + seg2['y'][0])/2,
+                        seg2['y'][0], seg2['y'][1]
+                    ]
+                else:  # linear interpolation
+                    x_points = [seg1['x'][-1], seg2['x'][0]]
+                    y_points = [seg1['y'][-1], seg2['y'][0]]
 
-        if actual_gap > 0:
-            interp_x = np.linspace(seg1['x'][-1], seg2['x'][0], 50)
-            f = interp1d([seg1['x'][-1], (seg2['x'][0] + seg1['x'][-1]) // 2, seg2['x'][0]],
-                         [seg1['y'][-1], (seg2['y'][0] + seg1['y'][-1]) // 2, seg2['y'][0]], kind=self.set_interpolation_order)
-            interp_y = f(interp_x)
+                # Create interpolation points
+                num_interp_points = 50
+                interp_x = np.linspace(seg1['x'][-1], seg2['x'][0], num_interp_points)
+                
+                try:
+                    # Create interpolation function
+                    f = interp1d(x_points, y_points, kind=interp_method)
+                    interp_y = f(interp_x)
+                except ValueError as e:
+                    print(f"Interpolation error: {e}. Falling back to linear interpolation.")
+                    # Fallback to linear interpolation
+                    f = interp1d([seg1['x'][-1], seg2['x'][0]], 
+                               [seg1['y'][-1], seg2['y'][0]], 
+                               kind='linear')
+                    interp_y = f(interp_x)
 
-            glued_x = np.concatenate((seg1['x'], interp_x, seg2['x']))
-            glued_y = np.concatenate((seg1['y'], interp_y, seg2['y']))
+                # Combine segments with interpolated points
+                glued_x = np.concatenate((seg1['x'], interp_x[1:-1], seg2['x']))
+                glued_y = np.concatenate((seg1['y'], interp_y[1:-1], seg2['y']))
 
-        elif actual_gap < 0:
-            overlap_start = np.searchsorted(seg2['x'], seg1['x'][-1])
-            glued_x = np.concatenate((seg1['x'], seg2['x'][overlap_start:]))
-            glued_y = np.concatenate((seg1['y'], seg2['y'][overlap_start:]))
+            elif actual_gap < 0:
+                overlap_start = np.searchsorted(seg2['x'], seg1['x'][-1])
+                glued_x = np.concatenate((seg1['x'], seg2['x'][overlap_start:]))
+                glued_y = np.concatenate((seg1['y'], seg2['y'][overlap_start:]))
 
-        else:
-            glued_x = np.concatenate((seg1['x'], seg2['x']))
-            glued_y = np.concatenate((seg1['y'], seg2['y']))
+            else:
+                glued_x = np.concatenate((seg1['x'], seg2['x']))
+                glued_y = np.concatenate((seg1['y'], seg2['y']))
 
-        self.Glue_Editor.clear()
-        signal_glued = {
-            'x': glued_x,
-            'y': glued_y
-        }
+            # Ensure arrays have same length
+            min_len = min(len(glued_x), len(glued_y))
+            glued_x = glued_x[:min_len]
+            glued_y = glued_y[:min_len]
 
-        # Plot the original segments in different colors
-        self.Glue_Editor.plot(seg1['x'], seg1['y'], pen=pg.mkPen(color='r'))
-        self.Glue_Editor.plot(seg2['x'], seg2['y'], pen=pg.mkPen(color='b'))
+            signal_glued = {'x': glued_x, 'y': glued_y}
 
-        # Plot the glued signal in green
-        self.Glue_Editor.plot(glued_x, glued_y, pen=pg.mkPen(color='g'))
+            # Update plot with consistent colors
+            self.Glue_Editor.clear()
+            self.Glue_Editor.plot(seg1['x'], seg1['y'], pen=self.signal1_color)  # Green
+            self.Glue_Editor.plot(seg2['x'], seg2['y'], pen=self.signal2_color)  # Blue
+            
+            # Plot glued sections with their original colors
+            glue_start = len(seg1['x'])
+            glue_end = glue_start + len(interp_x) - 2
+            
+            # Plot first segment in green
+            self.Glue_Editor.plot(glued_x[:glue_start], glued_y[:glue_start], 
+                                 pen=self.signal1_color)
+            
+            # Plot interpolated section in gray
+            if actual_gap > 0:
+                self.Glue_Editor.plot(glued_x[glue_start:glue_end], 
+                                    glued_y[glue_start:glue_end],
+                                    pen=pg.mkPen(color='gray', width=2))
+            
+            # Plot second segment in blue
+            self.Glue_Editor.plot(glued_x[glue_end:], glued_y[glue_end:], 
+                                 pen=self.signal2_color)
 
-        self.calc_statistics(signal_glued)
+            self.calc_statistics(signal_glued)
+            return signal_glued
 
-    def set_interpolation_order(self, order):
-        self.interpolation_order = order
+        except Exception as e:
+            print(f"Error in glue operation: {str(e)}")
+            return None
 
     def calc_statistics(self, signal):
         mean_val = np.mean(signal['y'])
@@ -311,6 +369,12 @@ class ChannelViewer(QDialog):
     def report_generate(self):
         self.report_window = ReportGenerate.SignalReportGenerator(self.snapshots)
         self.report_window.show()
+
+    # Add new method to handle interpolation changes
+    def update_interpolation(self):
+        """Update the glue operation when interpolation method changes"""
+        if self.selected_segments:
+            self.glue_segments()
 
 
 def generate_signal(length):
