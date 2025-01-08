@@ -80,17 +80,15 @@ class SignalReportGenerator(QWidget):
         selected_signal_data = self.signal_data["Signal"]
 
         stats = ChannelViewer.get_signal_stat()
-        # stats = [   # Example statistics data
-        #     {'Mean': 0.5, 'Std': 0.1, 'Min': 0.3, 'Max': 0.7, 'Duration': 10},
-        #     {'Mean': 0.6, 'Std': 0.2, 'Min': 0.4, 'Max': 0.8, 'Duration': 10},
-        #     {'Mean': 0.7, 'Std': 0.3, 'Min': 0.5, 'Max': 0.9, 'Duration': 10}
-        # ]
 
 
-        # Ask the user for the location to save the file
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        file_path, _ = QFileDialog.getSaveFileName(self, "Save Report As", "", "PDF Files (*.pdf);;All Files (*)", options=options)
+        # Simplified file dialog without options
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save Report As",
+            "",
+            "PDF Files (*.pdf);;All Files (*)"
+        )
         
         if file_path:
             # Generate PDF report with the selected snapshots
@@ -167,18 +165,21 @@ class SignalReportGenerator(QWidget):
             # Fetch the latest data for the chosen signal (using 'Signal')
             selected_signal_data = self.signal_data["Signal"]
 
-            # stats = ChannelViewer.get_signal_stat()
-            stats = [   # Example statistics data
-                {'Mean': 0.5, 'Std': 0.1, 'Min': 0.3, 'Max': 0.7, 'Duration': 10},
-                {'Mean': 0.6, 'Std': 0.2, 'Min': 0.4, 'Max': 0.8, 'Duration': 10},
-                {'Mean': 0.7, 'Std': 0.3, 'Min': 0.5, 'Max': 0.9, 'Duration': 10}
-            ]
+            stats = ChannelViewer.get_signal_stat()
+            # stats = [   # Example statistics data
+            #     {'Mean': 0.5, 'Std': 0.1, 'Min': 0.3, 'Max': 0.7, 'Duration': 10},
+            #     {'Mean': 0.6, 'Std': 0.2, 'Min': 0.4, 'Max': 0.8, 'Duration': 10},
+            #     {'Mean': 0.7, 'Std': 0.3, 'Min': 0.5, 'Max': 0.9, 'Duration': 10}
+            # ]
 
-            # Ask the user for the location to save the file
-            options = QFileDialog.Options()
-            options |= QFileDialog.DontUseNativeDialog
-            file_path, _ = QFileDialog.getSaveFileName(self, "Save Report As", "", "Text Files (*.txt);;All Files (*)", options=options)
-            
+            # Simplified file dialog without options
+            file_path, _ = QFileDialog.getSaveFileName(
+                self,
+                "Save Report As",
+                "",
+                "Text Files (*.txt);;All Files (*)"
+            )
+
             if file_path:
                 # Generate text report with the selected snapshots
                 self.create_text_report(stats, selected_snapshots, filename=file_path)

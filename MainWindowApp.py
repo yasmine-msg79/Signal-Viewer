@@ -28,100 +28,9 @@ from Classes import ChannelViewer, NonRectangular
 
 
 
-# class RealTimeCpuPlot(QtWidgets.QWidget):
-
-#     def __init__(self, *args, **kwargs):
-#         super(RealTimeCpuPlot, self).__init__(*args, **kwargs)
-
-#         # Set window title and size
-#         self.setWindowTitle("Real-Time CPU Usage")
-#         self.setGeometry(100, 100, 800, 600)
-
-#         # Create layout and plot widget
-#         self.layout = QtWidgets.QVBoxLayout(self)
-#         self.plot_widget = pg.PlotWidget()
-#         self.layout.addWidget(self.plot_widget)
-
-#         # Initialize plot data
-#         self.plot_data = self.plot_widget.plot()
-
-#         # Set labels and legend for the plot
-#         self.plot_widget.setLabel('left', 'CPU Usage (%)')
-#         self.plot_widget.setLabel('bottom', 'Time (s)')
-#         self.plot_widget.addLegend()
-#         self.plot_data = self.plot_widget.plot(name="CPU Usage")
-
-#         # Set up a timer to update the plot every second
-#         self.timer = QtCore.QTimer()
-#         self.timer.timeout.connect(self.update_plot)
-#         self.timer.start(1000)
-
-#         # Initialize data list to store CPU usage values
-#         self.data = []
-
-#     def update_plot(self):
-#         # Get current CPU usage
-#         cpu_usage = psutil.cpu_percent()
-
-#         # Append the CPU usage to the data list
-#         self.data.append(cpu_usage)
-
-#         # Keep only the last 100 data points
-#         if len(self.data) > 100:
-#             self.data.pop(0)
-
-#         # Update the plot with the new data
-#         self.plot_data.setData(self.data)
-
 def get_glued_data():
     return MainWindow().get_glued_info()
 
-
-# class RealTimeCpuPlot(QtWidgets.QWidget):
-
-#     def __init__(self, *args, **kwargs):
-#         super(RealTimeCpuPlot, self).__init__(*args, **kwargs)
-
-#         # Set window title and size
-#         self.setWindowTitle("Real-Time CPU Usage")
-#         self.setGeometry(100, 100, 800, 600)
-
-#         # Create layout and plot widget
-#         self.layout = QtWidgets.QVBoxLayout(self)
-#         self.plot_widget = pg.PlotWidget()
-#         self.layout.addWidget(self.plot_widget)
-
-#         # Initialize plot data
-#         self.plot_data = self.plot_widget.plot()
-
-#         # Set labels and legend for the plot
-#         self.plot_widget.setLabel('left', 'CPU Usage (%)')
-#         self.plot_widget.setLabel('bottom', 'Time (s)')
-#         self.plot_widget.addLegend()
-#         self.plot_data = self.plot_widget.plot(name="CPU Usage")
-
-#         # Set up a timer to update the plot every second
-#         self.timer = QtCore.QTimer()
-#         self.timer.timeout.connect(self.update_plot)
-#         self.timer.start(1000)
-
-#         # Initialize data list to store CPU usage values
-#         self.data = []
-
-#     def update_plot(self):
-#         # Get current CPU usage
-#         cpu_usage = psutil.cpu_percent()
-
-#         # Append the CPU usage to the data list
-#         self.data.append(cpu_usage)
-
-#         # Keep only the last 100 data points
-#         if len(self.data) > 100:
-#             self.data.pop(0)
-
-#         # Update the plot with the new data
-#         self.plot_data.setData(self.data)
-# >>>>>>> 76353ae2df383301476587ee1dae9cfe340213b3
 
 
 class RealTimeSatellitePlot(QtWidgets.QWidget):
@@ -1292,7 +1201,6 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.signals_lines[graph][i].setVisible(True)
             self.hideButton.setText("Hide")
 
-    # Including X and Y Ranges for Glue
 
     def toggle_play_pause(self):  # Play and Pause Graphs
 
@@ -1301,12 +1209,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.is_playing[0]["is_playing"] = False
                 self.playButton.setText('Play')
                 self.set_icon("Icons/play-svgrepo-com.svg")
-
-                ######----->Yasmine  Get current view range for X and Y axes
-                # self.graph1_x_range = self.graph1.viewRange()[0]
-                # self.graph1_y_range = self.graph1.viewRange()[1]
-                # print(f"X-axis view range for graph1: Start = {self.graph1_x_range[0]}, End = {self.graph1_x_range[1]}")
-                # print(f"Y-axis view range for graph1: Start = {self.graph1_y_range[0]}, End = {self.graph1_y_range[1]}")
 
                 last_data = self.get_last_data_point("graph1")[0]
                 self.graph1.setLimits(xMin=0)
@@ -1328,10 +1230,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.set_icon("Icons/play-svgrepo-com.svg")
 
                 ######----->Yasmine  Get current view range for X and Y axes
-                # self.graph2_x_range = self.graph2.viewRange()[0]
-                # self.graph2_y_range = self.graph2.viewRange()[1]
-                # print(f"X-axis view range for graph2: Start = {self.graph2_x_range[0]}, End = {self.graph2_x_range[1]}")
-                # print(f"Y-axis view range for graph2: Start = {self.graph2_y_range[0]}, End = {self.graph2_y_range[1]}")
 
                 last_data = self.get_last_data_point("graph2")[0]
                 self.graph2.setLimits(xMin=0, xMax=last_data)
@@ -1518,16 +1416,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.non_rect_window = NonRectangular.NonRectangularPlot()
         self.non_rect_window.show()
 
-    # GLUE FUNCTIONS
-    # def get_glue_data(self):
-    #     if self.glued_data is None:
-    #         limits_glue1 = self.graph1_x_range
-    #         limits_glue2 = self.graph2_x_range
-    #         time1, data1 = self.signals["graph1"][0][0]
-    #         time2, data2 = self.signals["graph2"][0][0]
-    #         signal1 = {'x': time1, 'y': data1}
-    #         signal2 = {'x': time2, 'y': data2}
-    #         self.glued_data = [limits_glue1, limits_glue2, signal1, signal2]
 
     def get_glued_info(self):
         return self.glued_data
