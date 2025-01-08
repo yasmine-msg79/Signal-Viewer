@@ -45,5 +45,4 @@ A Python-based application for real-time visualization and analysis of signal da
 - ├── Non_rectangular.ui │
 
   ## Demo Video
-  
-  https://github.com/yasmine-msg79/Signal-Viewer/blob/main/task1.mp4
+  https://github.com/yasmine-msg79/Signal-Viewer/blob/main/Task1.mp4
