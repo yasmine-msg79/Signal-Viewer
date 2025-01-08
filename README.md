@@ -27,18 +27,19 @@ A Python-based application for real-time visualization and analysis of signal da
 - NumPy
 
 ## Project Structure
-├── Classes/ 
-├── ChannelViewer.py │ 
-├── NonRectangular.py │
-└── ReportGenerate.py ├
-── Data/ 
-├── EEG.csv │ 
-├── emg_healthy.csv │
-├── emg_neuropathy.csv │ 
-├── rec_1r.csv │
-└── rec_2f.csv ├
-── Icons/ 
-├── UI/ │
-├── channel_viewer.ui │
-├── control_panel.ui │ 
-├── Non_rectangular.ui │
+
+- ├── Classes/ 
+- ├── ChannelViewer.py │ 
+- ├── NonRectangular.py │
+- └── ReportGenerate.py ├
+- ── Data/ 
+- ├── EEG.csv │ 
+- ├── emg_healthy.csv │
+- ├── emg_neuropathy.csv │ 
+- ├── rec_1r.csv │
+- └── rec_2f.csv ├
+- ── Icons/ 
+- ├── UI/ │
+- ├── channel_viewer.ui │
+- ├── control_panel.ui │ 
+- ├── Non_rectangular.ui │
