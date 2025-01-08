@@ -43,3 +43,7 @@ A Python-based application for real-time visualization and analysis of signal da
 - ├── channel_viewer.ui │
 - ├── control_panel.ui │ 
 - ├── Non_rectangular.ui │
+
+  ## Demo Video
+  
+  https://github.com/yasmine-msg79/Signal-Viewer/blob/main/task1.mp4
