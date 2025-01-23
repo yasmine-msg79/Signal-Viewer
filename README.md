@@ -55,13 +55,13 @@ https://github.com/user-attachments/assets/20e02fe8-04ad-4676-99cf-69a11991a968
 | Name | GitHub | LinkedIn |
 | ---- | ------ | -------- |
 
-| Mostafa Mousa | [![GitHub](https://img.shields.io/badge/GitHub-%23121011.svg?logo=github&logoColor=white)](https://github.com/MostafaMousaaa) 
+ Mostafa Mousa     [![GitHub](https://img.shields.io/badge/GitHub-%23121011.svg?logo=github&logoColor=white)](https://github.com/MostafaMousaaa) 
 
-| Yasmine Gaballa | [![GitHub](https://img.shields.io/badge/GitHub-%23121011.svg?logo=github&logoColor=white)](https://github.com/yasmine-msg79)|
-
-
-| Ayatullah Ahmed | [![GitHub](https://img.shields.io/badge/GitHub-%23121011.svg?logo=github&logoColor=white)](https://github.com/Ayatullah-ahmed)|
+ Yasmine Gaballa     [![GitHub](https://img.shields.io/badge/GitHub-%23121011.svg?logo=github&logoColor=white)](https://github.com/yasmine-msg79)|
 
 
+ Ayatullah Ahmed     [![GitHub](https://img.shields.io/badge/GitHub-%23121011.svg?logo=github&logoColor=white)](https://github.com/Ayatullah-ahmed)|
 
-| Farha | [![GitHub](https://img.shields.io/badge/GitHub-%23121011.svg?logo=github&logoColor=white)](https://github.com/farha1010)|
+
+
+ Farha     [![GitHub](https://img.shields.io/badge/GitHub-%23121011.svg?logo=github&logoColor=white)](https://github.com/farha1010)|
