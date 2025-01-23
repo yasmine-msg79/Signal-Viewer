@@ -45,8 +45,6 @@ A Python-based application for real-time visualization and analysis of signal da
 - ├── Non_rectangular.ui │
 
 
-## Demo Video
-
 <div align="center">
   <h2>Demo Video</h2>
   <img src="https://github.com/user-attachments/assets/e1655383-93ea-48ec-8deb-a1f6aecab94a" alt="Demo Video">
