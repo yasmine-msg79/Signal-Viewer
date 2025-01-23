@@ -65,8 +65,7 @@ This application serves as a powerful tool for visualizing and analyzing multi-c
 │   ├── control_panel.ui
 │   └── Non_rectangular.ui
 └── MainWindowApp.py         # Application entry point
-
-
+```
 ## Demo 
 https://github.com/user-attachments/assets/20e02fe8-04ad-4676-99cf-69a11991a968
 
