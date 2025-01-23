@@ -47,4 +47,4 @@ A Python-based application for real-time visualization and analysis of signal da
 
 ## Demo Video
 
-[![Watch the video](https://img.youtube.com/vi/TASK1MP4_DEFAULT.jpg)](https://github.com/yasmine-msg79/Signal-Viewer/blob/main/Task1.mp4)
+[Watch the Demo Video](https://github.com/yasmine-msg79/Signal-Viewer/blob/main/Data/Task1.mp4)
