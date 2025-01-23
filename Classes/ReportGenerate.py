@@ -166,11 +166,6 @@ class SignalReportGenerator(QWidget):
             selected_signal_data = self.signal_data["Signal"]
 
             stats = ChannelViewer.get_signal_stat()
-            # stats = [   # Example statistics data
-            #     {'Mean': 0.5, 'Std': 0.1, 'Min': 0.3, 'Max': 0.7, 'Duration': 10},
-            #     {'Mean': 0.6, 'Std': 0.2, 'Min': 0.4, 'Max': 0.8, 'Duration': 10},
-            #     {'Mean': 0.7, 'Std': 0.3, 'Min': 0.5, 'Max': 0.9, 'Duration': 10}
-            # ]
 
             # Simplified file dialog without options
             file_path, _ = QFileDialog.getSaveFileName(

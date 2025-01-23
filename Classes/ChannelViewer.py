@@ -33,19 +33,9 @@ class ChannelViewer(QDialog):
     
     def __init__(self, glue_items, *args, **kwargs):
         super(ChannelViewer, self).__init__(*args, **kwargs)
-        # self.limit_graph2 = None
-        # self.limit_graph1 = None
-        # self.signal2 = None
-        # self.signal1 = None
-        # self.glue_data = MainWindowApp.get_glued_data()
-        # self.main_window = main_instance
+  
         uic.loadUi(r"UI\channel_viewer.ui", self)
-        # signal1 = None
-        # signal2 = None
 
-        # limit_1, limit_2, signal1, signal2 = MainWindowApp.get_glued_data()
-        # self.limit_1 = glue_items[0]
-        # self.limit_2 = glue_items[1]
         self.signal1 = glue_items[2]
         self.signal2 = glue_items[3]
 
@@ -101,8 +91,6 @@ class ChannelViewer(QDialog):
             self.plot_rect(self.signal1, self.graph1, self.signal1_color)
             self.plot_rect(self.signal2, self.graph2, self.signal2_color)
 
-        # display_rect_signal(self.signal1, self.graph1)
-        # display_rect_signal(self.signal2, self.graph2)
 
         self.clear_button.hide()
         self.snapshot_button.hide()
